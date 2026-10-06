@@ -15,7 +15,9 @@ Console.WriteLine($"Тип: {cat.GetType().Name}");
 foreach (var property in cat.GetType().GetProperties())
     Console.WriteLine($"{property.Name}: {property.PropertyType.Name} = {property.GetValue(cat)}");
 
-var name = typeof(Cat).GetProperty(nameof(Cat.Name))!;
+var propertyName = nameof(Cat.Name);
+var name = typeof(Cat).GetProperty(propertyName)
+    ?? throw new ArgumentException($"У типа Cat нет свойства '{propertyName}'. Проверь имя.");
 name.SetValue(cat, "Генеральный директор по сну");
 Console.WriteLine($"Теперь: {cat.Name}");
 
