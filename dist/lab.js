@@ -12,17 +12,19 @@ function selectScene(index) {
   drafts[selected] = editor.value || drafts[selected];
   selected = index;
   const scene = scenes[index];
+  if (scene.bonus) document.getElementById('bonus').open = true;
   editor.value = drafts[index];
   document.getElementById('scene-title').textContent = scene.title;
   document.getElementById('prompt').textContent = scene.prompt;
   document.getElementById('challenge').textContent = scene.challenge;
   document.getElementById('takeaway').textContent = scene.takeaway;
+  document.getElementById('speech').textContent = scene.speech || 'Этот эксперимент необязательный. Его можно оставить на следующую пару. Объяснение есть в подробном конспекте.';
   document.getElementById('break').textContent = scene.action;
   document.getElementById('change').hidden = true;
   document.getElementById('read').href = `conspect.html#${scene.read}`;
   document.querySelectorAll('[role=tab]').forEach((tab, i) => tab.setAttribute('aria-selected', String(i === index)));
   document.getElementById('previous').disabled = index === 0;
-  document.getElementById('next').disabled = index === scenes.length - 1;
+  document.getElementById('next').disabled = index === 2 || index === scenes.length - 1;
   showOutput('Нажми «Запустить C#». Здесь появится вывод программы.', true);
   history.replaceState(null, '', `#experiment-${index + 1}`);
 }
@@ -36,7 +38,7 @@ function updateControls() {
   document.querySelectorAll('[role=tab]').forEach(tab => { tab.disabled = running; });
   for (const id of ['reset', 'break']) document.getElementById(id).disabled = running;
   document.getElementById('previous').disabled = running || selected === 0;
-  document.getElementById('next').disabled = running || selected === scenes.length - 1;
+  document.getElementById('next').disabled = running || selected === 2 || selected === scenes.length - 1;
 }
 function run() {
   if (!ready || running) return;
@@ -53,10 +55,10 @@ for (const [index, scene] of scenes.entries()) {
   button.setAttribute('aria-selected', 'false');
   button.textContent = `${index + 1}. ${scene.title}`;
   const label = document.createElement('small');
-  label.textContent = `${scene.time} мин · ${scene.topic}`;
+  label.textContent = scene.bonus ? `Бонус · ${scene.topic}` : `${scene.time} мин · ${scene.topic}`;
   button.append(label);
   button.addEventListener('click', () => selectScene(index));
-  document.getElementById('scenes').append(button);
+  document.getElementById(scene.bonus ? 'bonus-scenes' : 'scenes').append(button);
 }
 runButton.addEventListener('click', run);
 document.getElementById('reset').addEventListener('click', () => {
@@ -73,7 +75,7 @@ document.getElementById('break').addEventListener('click', () => {
   const oldCode = editor.value;
   const offset = oldCode.indexOf(scene.breakFrom);
   const lineStart = oldCode.lastIndexOf('\n', offset - 1) + 1;
-  const lineEnd = oldCode.indexOf('\n', offset);
+  const lineEnd = oldCode.indexOf('\n', offset + scene.breakFrom.length);
   const oldLine = oldCode.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
   const newLine = oldLine.replace(scene.breakFrom, scene.breakTo);
   const line = oldCode.slice(0, offset).split('\n').length;

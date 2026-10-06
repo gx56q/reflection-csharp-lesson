@@ -165,3 +165,54 @@ static Expression DiffCall(MethodCallExpression call)
 }`
   }
 ];
+
+const advancedExperiments = window.experiments.slice(2);
+window.experiments = [window.experiments[0], window.experiments[1], {
+  title: 'Собери своего кота', time: '45–65', topic: 'Задача в парах',
+  prompt: 'Добавь коту случайный аппетит. Потом придумай ещё одну характеристику: шумность, скорость или любовь к коробкам.',
+  challenge: 'На работу — 20 минут. Добавь свойство double с атрибутом RandomRange. Менять цикл генерации не нужно.',
+  takeaway: 'Один и тот же код находит новые свойства и читает их настройки. Так рефлексия избавляет библиотеку от перечисления каждого свойства вручную.',
+  read: 'random', action: 'Добавить настройку аппетита',
+  breakFrom: '    public double Appetite { get; set; }',
+  breakTo: '    [RandomRange(1, 10)]\n    public double Appetite { get; set; }',
+  code: `using System;
+using System.Reflection;
+
+var random = new Random(42);
+for (var i = 0; i < 3; i++)
+{
+    var cat = new Cat();
+    Console.WriteLine($"Кот №{i + 1}");
+    foreach (var property in typeof(Cat).GetProperties())
+    {
+        var range = property.GetCustomAttribute<RandomRangeAttribute>();
+        if (range != null)
+            property.SetValue(cat, range.Min + random.NextDouble() * (range.Max - range.Min));
+        Console.WriteLine($"  {property.Name}: {property.GetValue(cat):F1}");
+    }
+}
+
+public class Cat
+{
+    [RandomRange(12, 20)]
+    public double Sleep { get; set; }
+    // Добавь атрибут, чтобы генератор заполнял аппетит.
+    public double Appetite { get; set; }
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+public class RandomRangeAttribute(double min, double max) : Attribute
+{
+    public double Min { get; } = min;
+    public double Max { get; } = max;
+}`
+}, ...advancedExperiments];
+window.experiments[0].time = '10–25';
+window.experiments[0].title = 'Что программа знает о коте';
+window.experiments[0].prompt = 'Нажми «Запустить C#». Программа перечислит свойства кота и переименует его. Цикл не знает имён этих свойств заранее.';
+window.experiments[0].speech = '«Обычно мы пишем cat.Name. А здесь программа сама узнаёт, какие свойства есть у кота. Это и называется рефлексией». Затем нажми «Сломать имя свойства» и запусти снова: «Свойство с таким именем не нашлось. Поэтому при рефлексии нужны проверки». Кнопка «Вернуть пример» восстановит рабочий код.';
+window.experiments[1].time = '25–45';
+window.experiments[1].title = 'Генератор случайных котов';
+window.experiments[1].speech = '«Квадратные скобки задают границы: сколько кот спит и насколько он наглый. Наш код читает эти настройки и выбирает число». Нажми «Убрать атрибут» и запусти снова: «Наглость теперь нулевая. Без настройки генератор это свойство пропускает». Для разнообразия поменяй границы сна с 12–20 на 1–3.';
+window.experiments[2].speech = '«Теперь соберите своего кота. У него должна появиться новая случайная характеристика. Можно менять только класс Cat: цикл оставьте как есть». Если пара застряла, покажи кнопку «Добавить настройку аппетита». Затем попроси добавить ещё одну характеристику самостоятельно.';
+for (const scene of advancedExperiments) scene.bonus = true;
