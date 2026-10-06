@@ -6,8 +6,10 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.JSInterop;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+var host = builder.Build();
 await Runner.Initialize(new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-await builder.Build().RunAsync();
+await host.Services.GetRequiredService<IJSRuntime>().InvokeVoidAsync("runtimeReady");
+await host.RunAsync();
 
 public static class Runner
 {

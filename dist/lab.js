@@ -28,7 +28,14 @@ function showOutput(text, empty = false) {
   output.textContent = text;
   output.classList.toggle('empty', empty);
 }
-function updateControls() { runButton.disabled = !ready || running; }
+function updateControls() {
+  runButton.disabled = !ready || running;
+  editor.readOnly = running;
+  document.querySelectorAll('[role=tab]').forEach(tab => { tab.disabled = running; });
+  for (const id of ['reset', 'break']) document.getElementById(id).disabled = running;
+  document.getElementById('previous').disabled = running || selected === 0;
+  document.getElementById('next').disabled = running || selected === scenes.length - 1;
+}
 function run() {
   if (!ready || running) return;
   running = true;

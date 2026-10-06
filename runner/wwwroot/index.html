@@ -3,7 +3,8 @@
 <body><script src="_framework/blazor.webassembly.js" autostart="false"></script>
 <script>
 const origin = location.origin;
-Blazor.start().then(() => parent.postMessage({type:'csharp-ready'}, origin))
+window.runtimeReady = () => parent.postMessage({type:'csharp-ready'}, origin);
+Blazor.start()
   .catch(error => parent.postMessage({type:'csharp-error', text:String(error)}, origin));
 addEventListener('message', async event => {
   if (event.origin !== origin || event.source !== parent || event.data.type !== 'csharp-run') return;
