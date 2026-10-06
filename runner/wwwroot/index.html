@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><base href="./"><title>C# runtime</title></head>
+<body><script src="_framework/blazor.webassembly.js" autostart="false"></script>
+<script>
+const origin = location.origin;
+Blazor.start().then(() => parent.postMessage({type:'csharp-ready'}, origin))
+  .catch(error => parent.postMessage({type:'csharp-error', text:String(error)}, origin));
+addEventListener('message', async event => {
+  if (event.origin !== origin || event.source !== parent || event.data.type !== 'csharp-run') return;
+  try {
+    const text = await DotNet.invokeMethodAsync('Runner', 'Run', event.data.code);
+    parent.postMessage({type:'csharp-result', id:event.data.id, text}, origin);
+  } catch (error) {
+    parent.postMessage({type:'csharp-result', id:event.data.id, text:String(error)}, origin);
+  }
+});
+</script></body></html>

@@ -23,6 +23,13 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build browser C# runtime
+        run: |
+          dotnet publish runner/Runner.csproj -c Release -o .artifacts/runner
+          cp -R .artifacts/runner/wwwroot dist/runner
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
