@@ -63,7 +63,7 @@ public class CatsController : ControllerBase
     public IActionResult Get(int id)
         =&gt; Ok(new { Id = id, Name = "Барсик" });
 }</code></pre><p class="say">«Браузер прислал URL, а сервер вызвал Get с числом 42. Откуда он узнал про этот метод? MVC обнаруживает контроллеры и читает их описание, в том числе атрибуты маршрутов».</p><p>Фрагмент требует веб-проекта и <code>using Microsoft.AspNetCore.Mvc;</code>. На паре достаточно показать связь: URL → атрибут → метод. Сведения о контроллерах подготавливаются заранее; это не поиск всех методов заново на каждый запрос. Minimal API может регистрировать обработчик явно — механизм зависит от способа построения приложения. <a href="https://learn.microsoft.com/en-us/aspnet/core/mvc/advanced/app-parts?view=aspnetcore-8.0">Обнаружение контроллеров в MVC</a>.</p></details>
-<details><summary>4. Добавить расширение, не переписывая основную программу</summary><p>Например, приложение загружает модуль экспорта отчётов из отдельной сборки. У модулей есть общий интерфейс:</p><pre><code>public interface IReportExporter
+<details><summary>4. Плагин: дополнительный модуль из DLL</summary><p>Конкретный пример — дополнительные эффекты обработки изображений в Paint.NET. Их устанавливают как DLL, после чего в редакторе появляются новые команды. <a href="https://paint.net/doc/latest/InstallPlugins.html">Установка расширений Paint.NET</a>.</p><p>Ниже учебная модель такого подключения, а не код Paint.NET: приложение отчётов загружает CsvExporter.dll, чтобы появился новый формат экспорта. DLL — отдельная библиотека с кодом. У модулей есть общий интерфейс:</p><pre><code>public interface IReportExporter
 {
     void Export();
 }
@@ -71,7 +71,7 @@ public class CatsController : ControllerBase
 public class CsvExporter : IReportExporter
 {
     public void Export() =&gt; Console.WriteLine("Экспорт в CSV");
-}</code></pre><p>Упрощённый код поиска: переменная <code>assembly</code> содержит уже загруженную сборку расширения.</p><pre><code>var type = assembly.GetTypes().First(t =&gt;
+}</code></pre><p>Приложение знает интерфейс IReportExporter. Подключённая библиотека содержит CsvExporter. Сначала библиотеку загружают, затем ищут в ней подходящий класс. Во фрагменте переменная assembly — уже загруженная библиотека; остальные части показаны выше.</p><pre><code>var type = assembly.GetTypes().First(t =&gt;
     typeof(IReportExporter).IsAssignableFrom(t)
     &amp;&amp; t.IsClass &amp;&amp; !t.IsAbstract);
 var exporter = (IReportExporter)Activator.CreateInstance(type)!;
