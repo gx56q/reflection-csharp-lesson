@@ -168,14 +168,34 @@ var setSleep = sleepProperty.SetMethod!
 foreach (var cat in cats)
     setSleep(cat, 16.0);</code></pre>
 <p>Здесь предполагается публичный setter double-свойства у класса Cat. Поиск и подготовка сделаны заранее. Цикл вызывает делегат с конкретными типами аргументов. Если нужна целая функция — создать объект и заполнить несколько свойств — её удобно собрать деревом выражения. Именно это сделаем в активности. <a href="https://learn.microsoft.com/en-us/dotnet/api/system.reflection.methodinfo">CreateDelegate</a>.</p>
-<h3>Третий шаг: не тратить подготовку на каждый объект</h3>
-<pre><code>// Неудачно: Compile снова на каждой генерации.
-public T Generate(Random rnd) =&gt; CreateFactory().Invoke(rnd);
+<h3>Третий шаг: не тратить подготовку на каждый объект</h3><p>Сначала вариант, где подготовка ошибочно находится внутри Generate:</p><pre><code>// Неудачно: вся подготовка повторяется при каждом вызове.
+public T Generate(Random rnd)
+{
+    var distributions = CreateDistributionsFromAttributes();
+    var factory = CreateFactory(distributions); // Здесь строится дерево и вызывается Compile.
+    return factory(rnd);
+}</code></pre><p>Переносим её в конструктор. Теперь видно, где объявлено поле и кто его заполняет. Это устройство класса; полные реализации двух вспомогательных методов доступны по кнопке ниже.</p><pre><code>public class Generator&lt;T&gt; where T : new()
+{
+    private readonly Func&lt;Random, T&gt; factory;
 
-// Лучше: поле подготовлено в конструкторе генератора.
-public T Generate(Random rnd) =&gt; factory(rnd);</code></pre>
-<p>Здесь CreateFactory обозначает метод, который строит дерево и вызывает Compile. Фрагменты — два альтернативных тела метода. Само слово «скомпилировано» не означает, что подготовка бесплатна.</p>
-<div class="table-wrap"><table><thead><tr><th>Антипаттерн</th><th>Как делать</th></tr></thead><tbody>
+    public Generator()
+    {
+        var distributions = CreateDistributionsFromAttributes();
+        factory = CreateFactory(distributions); // Дерево и Compile один раз на генератор.
+    }
+
+    public T Generate(Random rnd)
+    {
+        return factory(rnd); // Только вызов готовой функции.
+    }
+
+    // Два вспомогательных метода показаны в полном примере по кнопке ниже:
+    // CreateDistributionsFromAttributes: читает свойства и создаёт распределения.
+    // CreateFactory: из этих пар собирает дерево и возвращает tree.Compile().
+}</code></pre><p><strong>Когда вызывается конструктор?</strong> При <code>new Generator&lt;Cat&gt;()</code>. Здесь читаются атрибуты, создаются распределения, строится дерево и сохраняется результат Compile.</p><pre><code>var generator = new Generator&lt;Cat&gt;(); // Подготовка один раз.
+var random = new Random(42);
+var first = generator.Generate(random); // Новый кот, новые числа.
+var second = generator.Generate(random); // Ещё один кот; подготовки нет.</code></pre><p>Если писать <code>new Generator&lt;Cat&gt;().Generate(random)</code> для каждого кота, подготовка снова будет повторяться. Один экземпляр генератора используй для нескольких объектов.</p><p><button type="button" class="demo-button" data-demo="generic">Открыть весь класс с конструктором и всеми методами ↓</button> · <a href="v2-code/generic.cs" download>Скачать полный запускаемый код</a></p><div class="table-wrap"><table><thead><tr><th>Антипаттерн</th><th>Как делать</th></tr></thead><tbody>
 <tr><td>Искать свойства и читать атрибуты в каждом Generate.</td><td>Один раз подготовить свойства и распределения в конструкторе.</td></tr>
 <tr><td>Использовать поиск по строке для заранее известного свойства.</td><td>Прямое обращение. Если рефлексия нужна, nameof помогает избежать опечаток, но не проверяет результат поиска.</td></tr>
 <tr><td>После обнаружения плагина каждый раз вызывать MethodInfo.Invoke.</td><td>Создать объект и работать через общий интерфейс; для подходящего метода можно подготовить делегат.</td></tr>
