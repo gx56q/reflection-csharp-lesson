@@ -5,6 +5,7 @@ window.experiments = [
     challenge: 'Поменяй имя свойства на несуществующее. Кто заметит ошибку: компилятор или программа?',
     takeaway: 'Type описывает тип. PropertyInfo позволяет обратиться к свойству конкретного объекта. Имя из строки проверяется во время выполнения.',
     read: 'basics',
+    action: 'Сломать имя свойства',
     breakFrom: 'nameof(Cat.Name)', breakTo: '"ГдеМойКорм"',
     code: `using System;
 using System.Reflection;
@@ -29,7 +30,7 @@ public class Cat
     prompt: 'Это генератор характеристик кота. Меняй границы в атрибутах и запускай снова.',
     challenge: 'Убери атрибут у одного свойства. Изменится ли значение само по себе?',
     takeaway: 'Атрибут хранит настройку. Генератор читает её и присваивает значение. Без этого кода квадратные скобки ничего не генерируют.',
-    read: 'random', breakFrom: '[RandomRange(3, 10)]', breakTo: '// [RandomRange(3, 10)]',
+    read: 'random', action: 'Убрать атрибут', breakFrom: '[RandomRange(3, 10)]', breakTo: '// [RandomRange(3, 10)]',
     code: `using System;
 using System.Reflection;
 
@@ -67,7 +68,7 @@ public class RandomRangeAttribute(double min, double max) : Attribute
     prompt: 'Меняй x * x на x + 10 или Math.Sin(x). Посмотри, как меняются дерево и результат.',
     challenge: 'Два параметра с одинаковым именем — один параметр или два разных объекта?',
     takeaway: 'Дерево можно изучить, преобразовать или превратить в делегат. Имя узла — подпись; ссылки на параметр должны вести к тому же объекту.',
-    read: 'expressions', breakFrom: 'x => x * x', breakTo: 'x => Math.Sin(x * x)',
+    read: 'expressions', action: 'Заменить квадрат на синус', breakFrom: 'x => x * x', breakTo: 'x => Math.Sin(x * x)',
     code: `using System;
 using System.Linq.Expressions;
 
@@ -96,6 +97,7 @@ static void Print(Expression node, string indent)
     challenge: 'Подкинь ошибку: вместо вызова генератора в дерево попадёт уже вычисленное число. Случайность закончилась?',
     takeaway: 'Expression.Call описывает будущий вызов. Expression.Constant хранит готовое значение. Compile делаем при подготовке, а не внутри Generate.',
     read: 'activity',
+    action: 'Заморозить случайность',
     breakFrom: 'var value = Expression.Call(parameter, nextDouble);',
     breakTo: 'var value = Expression.Constant(random.NextDouble());',
     code: `using System;
@@ -124,7 +126,7 @@ public class Loot
     prompt: 'Меняй функцию: x * x, Math.Sin(3 * x), Math.Cos(x). Получится новое дерево и значение производной.',
     challenge: 'Попробуй Math.Abs(x). Программа должна честно отказаться, а не сочинять производную.',
     takeaway: 'Мы применяем математические правила к узлам. Для Sin(u) нужен множитель u′. Упрощение результата — отдельная задача.',
-    read: 'differentiate', breakFrom: 'x => Math.Sin(x * x)', breakTo: 'x => Math.Abs(x)',
+    read: 'differentiate', action: 'Попробовать Math.Abs', breakFrom: 'x => Math.Sin(x * x)', breakTo: 'x => Math.Abs(x)',
     code: `using System;
 using System.Linq.Expressions;
 

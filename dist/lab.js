@@ -17,11 +17,13 @@ function selectScene(index) {
   document.getElementById('prompt').textContent = scene.prompt;
   document.getElementById('challenge').textContent = scene.challenge;
   document.getElementById('takeaway').textContent = scene.takeaway;
+  document.getElementById('break').textContent = scene.action;
+  document.getElementById('change').hidden = true;
   document.getElementById('read').href = `conspect.html#${scene.read}`;
   document.querySelectorAll('[role=tab]').forEach((tab, i) => tab.setAttribute('aria-selected', String(i === index)));
   document.getElementById('previous').disabled = index === 0;
   document.getElementById('next').disabled = index === scenes.length - 1;
-  showOutput('Сначала предположи, что выведет программа. Потом запускай.', true);
+  showOutput('Нажми «Запустить C#». Здесь появится вывод программы.', true);
   history.replaceState(null, '', `#experiment-${index + 1}`);
 }
 function showOutput(text, empty = false) {
@@ -59,6 +61,7 @@ for (const [index, scene] of scenes.entries()) {
 runButton.addEventListener('click', run);
 document.getElementById('reset').addEventListener('click', () => {
   editor.value = drafts[selected] = scenes[selected].code;
+  document.getElementById('change').hidden = true;
   showOutput('Исходный пример восстановлен. Можно запускать.', true);
 });
 document.getElementById('break').addEventListener('click', () => {
@@ -67,9 +70,24 @@ document.getElementById('break').addEventListener('click', () => {
     showOutput('Ты уже изменил этот участок. Верни исходный пример, чтобы применить заготовленный поворот.', true);
     return;
   }
-  editor.value = editor.value.replace(scene.breakFrom, scene.breakTo);
-  showOutput('Код изменён. Предскажи результат и нажми «Запустить C#».', true);
+  const oldCode = editor.value;
+  const offset = oldCode.indexOf(scene.breakFrom);
+  const lineStart = oldCode.lastIndexOf('\n', offset - 1) + 1;
+  const lineEnd = oldCode.indexOf('\n', offset);
+  const oldLine = oldCode.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
+  const newLine = oldLine.replace(scene.breakFrom, scene.breakTo);
+  const line = oldCode.slice(0, offset).split('\n').length;
+  editor.value = oldCode.replace(scene.breakFrom, scene.breakTo);
+  document.getElementById('change-title').textContent = `Изменена строка ${line}`;
+  document.getElementById('before').textContent = oldLine;
+  document.getElementById('after').textContent = newLine;
+  document.getElementById('change').hidden = false;
+  editor.focus();
+  editor.setSelectionRange(offset, offset + scene.breakTo.length);
+  editor.scrollTop = Math.max(0, (line - 4) * parseFloat(getComputedStyle(editor).lineHeight));
+  showOutput(`Изменена строка ${line}. Сравни «было» и «стало», затем запускай.`, true);
 });
+editor.addEventListener('input', () => { document.getElementById('change').hidden = true; });
 document.getElementById('previous').addEventListener('click', () => selectScene(selected - 1));
 document.getElementById('next').addEventListener('click', () => selectScene(selected + 1));
 editor.addEventListener('keydown', event => {

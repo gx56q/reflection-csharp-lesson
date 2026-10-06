@@ -33,7 +33,8 @@ public static class Runner
             return "Пример слишком большой: оставь до 40 000 символов.";
         var tree = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.CSharp12));
         var compilation = CSharpCompilation.Create("Experiment_" + Guid.NewGuid().ToString("N"),
-            [tree], References, new CSharpCompilationOptions(OutputKind.ConsoleApplication));
+            // Browser WebAssembly cannot block while waiting for compiler workers.
+            [tree], References, new CSharpCompilationOptions(OutputKind.ConsoleApplication, concurrentBuild: false));
         using var image = new MemoryStream();
         var result = compilation.Emit(image);
         if (!result.Success)
