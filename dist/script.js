@@ -15,6 +15,7 @@ window.addEventListener('afterprint', () => {
   printDetails = [];
 });
 for (const block of document.querySelectorAll('pre')) {
+  if (document.body.dataset.completeExamples === 'true' && block.dataset.complete !== 'true') continue;
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'copy';

@@ -1,353 +1,178 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Пара v2 · Рефлексия и фабрика объектов</title><meta name="description" content="Понятная подготовка к активности Случайные объекты 2: рефлексия на примерах, сборка дерева по шагам, интерактивный C#."><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="v2.css"></head><body><a class="skip" href="#main">К конспекту</a><header class="top"><a class="brand" href="index.html"><span class="mark">{ }</span> На главную</a><div class="tools"><button id="projection" type="button" aria-pressed="false">Показать студентам</button><button id="print" type="button">Печать</button></div></header><div class="layout"><aside class="sidebar"><div class="overline">Пара v2 · 90 минут</div><nav aria-label="Разделы"><a href="#start">План пары</a><a href="#reflection">1. Рефлексия на коте</a><a href="#realworld">Примеры из разработки</a><a href="#bridge">2. Что ускоряем</a><a href="#performance">Цена и хорошие приёмы</a><a href="#expressions">3. Код как дерево</a><a href="#factory">4. Собираем фабрику</a><a href="#activity">5. Случайные объекты 2</a><a href="#playground">Запустить C#</a><a href="#finish">Итоги и ответы</a></nav></aside><main id="main">
-<section id="start"><div class="overline">Конспект преподавателя</div><h1>Рефлексия → дерево → фабрика</h1><p class="lead">До активности преподаватель показывает код и объясняет его; студенты самостоятельно выполняют только активность. Сначала узнаём, какие свойства есть у объекта. Затем один раз собираем функцию, которая создаёт новые объекты и заполняет их.</p><div class="teacher callout"><strong>Тебе для объяснения</strong><p>Цель пары — подготовить студентов именно к «Случайным объектам 2». Дифференцирование здесь не нужно. Реплики можно читать почти дословно. Для занятия нужен проект их предыдущей практики; для показов ниже есть встроенный редактор.</p></div><div class="table-wrap"><table><thead><tr><th>Минуты</th><th>Показ и действие</th></tr></thead><tbody><tr><td>00–20</td><td>Кот: Type, свойства, чтение, запись, атрибут. Коротко показать JSON и Test.</td></tr><tr><td>20–30</td><td>Показать старый Generate, объяснить расходы рефлексии и приёмы ускорения.</td></tr><tr><td>30–40</td><td>Func и Expression: одна лямбда, два способа её использовать.</td></tr><tr><td>40–60</td><td>Собрать фабрику одного кота по шагам и запустить.</td></tr><tr><td>60–85</td><td>Активность: перенести приём в Generator&lt;T&gt; из домашки.</td></tr><tr><td>85–90</td><td>Проверить Generate и обсудить, когда генерируется число.</td></tr></tbody></table></div></section><section id="reflection"><div class="overline">00–20 · показ</div><h2>1. Посмотреть на устройство кота</h2><pre><code>var cat = new Cat { Name = &quot;Барсик&quot;, Sleep = 16 };
-var type = typeof(Cat);
-foreach (var property in type.GetProperties())
-    Console.WriteLine($&quot;{property.Name}: {property.GetValue(cat)}&quot;);</code></pre><p class="say">«Мы знаем Cat, но внутри цикла нет ни Name, ни Sleep. Программа получила список свойств сама. Такая работа с описанием типа называется рефлексией.»</p><div class="table-wrap"><table><thead><tr><th>Код</th><th>Что получаем</th></tr></thead><tbody><tr><td><code>typeof(Cat)</code></td><td>Type: описание класса Cat. Самого кота не создаёт.</td></tr><tr><td><code>cat.GetType()</code></td><td>Тип уже существующего объекта. Полезно, если в переменной object лежит неизвестный объект.</td></tr><tr><td><code>type.GetProperties()</code></td><td>PropertyInfo для публичных свойств. Это описания, не их значения.</td></tr><tr><td><code>property.GetValue(cat)</code></td><td>Значение свойства у конкретного кота.</td></tr></tbody></table></div><h3>Прочитать и изменить значение</h3><pre><code>var nameProperty = typeof(Cat).GetProperty(nameof(Cat.Name))!;
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Пара v2 · Собираем проект по шагам</title><meta name="description" content="Фрагменты для последовательной сборки чистого проекта: точное место вставки, все определения, подготовка к Случайным объектам 2."><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="v2.css"></head><body data-complete-examples="true"><a class="skip" href="#main">К конспекту</a><header class="top"><a class="brand" href="index.html"><span class="mark">{ }</span> На главную</a><div class="tools"><button id="projection" type="button" aria-pressed="false">Показать студентам</button><button id="print" type="button">Печать</button></div></header><div class="layout"><aside class="sidebar"><div class="overline">Пара v2 · Собираем по шагам</div><nav aria-label="Разделы"><a href="#start">Как вести показ</a><a href="#reflection">1. Первый кот</a><a href="#generator">2. Настройки и Generator</a><a href="#expressions">3. Функция и дерево</a><a href="#factory">4. Фабрика из деталей</a><a href="#activity">Активность</a><a href="#realworld">В разработке</a><a href="#performance">Цена и хорошие приёмы</a><a href="#sql">Дерево → SQL</a><a href="#playground">Состояние проекта</a></nav></aside><main id="main">
+<section id="start"><h1>Собираем проект на глазах у группы</h1><p class="lead">Один консольный проект. По очереди добавляем фрагменты. Для каждого указано, в какой файл и в какое место его вставить.</p><div class="panel"><h3>Начало</h3><p>Создай консольный проект .NET 8 или новее с включёнными ImplicitUsings (в новом стандартном проекте включены). Пакеты не нужны. На первом шаге заменим стандартный Program.cs заготовкой с Main; дальше наращиваем этот проект, сохраняя предыдущий код.</p><p>Строки с указанием «в конец Main» вставляй внутрь метода, перед его закрывающей скобкой. Файлы классов создавай в том же проекте. Шаг изменения Cat отдельно указывает строки, которые добавляем к существующему классу.</p><p>Кнопка «Копировать» копирует только текущий фрагмент. Кнопка «Посмотреть весь проект» открывает собранное состояние для восстановления или показа в браузере; это дополнительная возможность.</p></div><div class="teacher callout"><strong>План</strong><p>00–20 — кот и рефлексия. 20–30 — настройки и генератор. 30–40 — Func и простое дерево. 40–60 — фабрика по частям. 60–85 — единственная самостоятельная работа студентов: «Случайные объекты 2». 85–90 — обсудить момент подготовки и момент генерации. Реальные примеры и подробности скорости — для обсуждения и подготовки; весь текст за пару читать не надо.</p></div></section><section id="reflection"><h2>1. Первый кот: свойства и присваивание</h2><article id="step-1" class="panel"><div class="overline">Фрагмент 1</div><h3>Подготовь пустой Main</h3><p><strong>Куда:</strong> Program.cs — только в начале замени стандартное содержимое.</p><pre data-complete="true"><code>using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Linq.Expressions;
+
+public class Program
+{
+    public static void Main()
+    {
+        // Здесь по порядку добавляем строки показов.
+    }
+}</code></pre><p>Это единственная начальная заготовка. Дальше добавляем код внутрь Main и создаём указанные файлы. Перед закрывающей скобкой Main оставляй место для следующих строк.</p><p><button class="demo-button" type="button" data-demo="step-1">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-2" class="panel"><div class="overline">Фрагмент 2</div><h3>Сначала объявим кота</h3><p><strong>Куда:</strong> Создай Cat.cs.</p><pre data-complete="true"><code>public class Cat
+{
+    public string Name { get; set; } = &quot;Барсик&quot;;
+    public double Sleep { get; set; } = 16;
+    public double Audacity { get; set; }
+}</code></pre><p>Теперь тип Cat существует. Пока это обычный класс без настроек генерации.</p><p><button class="demo-button" type="button" data-demo="step-2">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-3" class="panel"><div class="overline">Фрагмент 3</div><h3>Узнать свойства кота</h3><p><strong>Куда:</strong> Добавь в конец Main.</p><pre data-complete="true"><code>var cat = new Cat();
+var catType = typeof(Cat);
+Console.WriteLine($&quot;Тип: {catType.Name}&quot;);
+foreach (var property in catType.GetProperties())
+    Console.WriteLine($&quot;{property.Name}: {property.GetValue(cat)}&quot;);</code></pre><p>GetProperties возвращает описания свойств. GetValue читает значение у cat. Цикл сам находит Name, Sleep и Audacity; имена внутри цикла не перечислены.</p><p><strong>После запуска:</strong> Тип Cat; Name = Барсик, Sleep = 16, Audacity = 0.</p><p><button class="demo-button" type="button" data-demo="step-3">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-4" class="panel"><div class="overline">Фрагмент 4</div><h3>Поменять имя через найденное свойство</h3><p><strong>Куда:</strong> Добавь в конец Main.</p><pre data-complete="true"><code>var nameProperty = catType.GetProperty(nameof(Cat.Name))!;
 nameProperty.SetValue(cat, &quot;Кусь&quot;);
-Console.WriteLine(cat.Name); // Кусь</code></pre><p class="say">«PropertyInfo знает, какое свойство менять. Но ему ещё нужен объект: у какого именно кота поменять имя? Поэтому передаём cat.»</p><div class="teacher callout"><strong>Тебе для объяснения</strong><p>Знак ! здесь означает: мы уверены, что Name существует. Он не защищает от null. Если заменить имя на несуществующее, GetProperty вернёт null. В рабочем коде отсутствие свойства нужно обработать.</p></div><h3>Прочитать настройку из атрибута</h3><pre><code>[RandomRange(12, 20)]
-public double Sleep { get; set; }
-
-// В цикле по свойствам:
-var range = property.GetCustomAttribute&lt;RandomRangeAttribute&gt;();
-if (range != null)
-    Console.WriteLine($&quot;От {range.Min} до {range.Max}&quot;);</code></pre><p class="say">«Атрибут хранит настройку. Он сам не меняет Sleep. Наш код читает настройку и решает, как её применить. В домашке FromDistribution хранит тип распределения и аргументы его конструктора.»</p><p><button type="button" class="demo-button" data-demo="reflection">Открыть и запустить этот пример ↓</button></p><div class="teacher callout"><strong>Тебе для объяснения</strong><p>Нажми кнопку, запусти пример. Затем в редакторе добавь Cat свойство public int Lives { get; set; } = 9; и запусти снова. Lives появится без изменения цикла. Необязательно заранее спрашивать группу, что случится: просто покажи результат.</p></div><h3>Создание объекта и вызов метода тоже доступны</h3><pre><code>var instance = Activator.CreateInstance(typeof(Cat));
-// Если тип известен: new Cat() проще.
-// Если он пришёл из атрибута: ищем подходящий конструктор.
-var constructor = distributionType.GetConstructor(parameterTypes);
-var distribution = constructor!.Invoke(parameters);</code></pre><p>Последние строки — фрагмент из подготовки генератора: тип и параметры берутся из атрибута. Конструктор неизвестного заранее распределения нельзя перечислить вручную. После создания объекта удобно работать через <code>IContinuousDistribution</code>.</p></section><section id="realworld"><h2>Почему это встречается в обычном коде</h2><p>На паре достаточно JSON и NUnit. HTTP и плагины можно раскрыть, если останется время.</p><article class="panel"><h3>1. Отправить заказ в JSON</h3><p>В сервисе интернет-магазина нужно передать заказ другому сервису. Разработчик пишет:</p><pre><code>using System.Text.Json;
-using System.Text.Json.Serialization;
-
-var order = new Order { Id = 42, Total = 1290m };
-Console.WriteLine(JsonSerializer.Serialize(order));
-
-public class Order
+Console.WriteLine($&quot;Теперь имя: {cat.Name}&quot;);</code></pre><p>Мы передали описание свойства, конкретного кота и новое значение. Если GetProperty не найдёт свойство, он вернёт null. Знак ! не заменяет проверку.</p><p><strong>После запуска:</strong> Теперь имя: Кусь.</p><p><button class="demo-button" type="button" data-demo="step-4">Посмотреть весь проект после этого шага ↓</button></p></article></section><section id="generator"><h2>2. Настройки и рабочий Generator&lt;T&gt;</h2><article id="step-5" class="panel"><div class="overline">Фрагмент 5</div><h3>Объявить контракт распределения</h3><p><strong>Куда:</strong> Создай IContinuousDistribution.cs.</p><pre data-complete="true"><code>public interface IContinuousDistribution
 {
-    public int Id { get; set; }
-    public decimal Total { get; set; }
-    [JsonIgnore]
-    public string InternalComment { get; set; } = "Скидку согласовали";
-}</code></pre><p>Результат: <code>{"Id":42,"Total":1290}</code>. Внутренний комментарий в JSON не попал.</p><p class="say">«Мы не писали цикл по свойствам заказа. Библиотека сама узнала про Id и Total, прочитала JsonIgnore и пропустила комментарий. Наш генератор котов тоже читает свойства и их настройки».</p><details class="teacher"><summary>Где именно здесь рефлексия?</summary><p>В обычном режиме System.Text.Json получает сведения о типах через рефлексию и кэширует их. Вызов Serialize скрывает эту работу. Сведения также можно подготовить при сборке с помощью source generator — поэтому нельзя утверждать, что любой JSON всегда делается рефлексией.</p><p>Это полный пример для консольного проекта .NET 8. Встроенная лаборатория использует ограниченный набор библиотек; этот пример запускай в IDE. <a href="https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/reflection-vs-source-generation">Как устроены два режима System.Text.Json</a>.</p></details></article>
-<article class="panel"><h3>2. Почему кнопка «Запустить тесты» находит твой метод?</h3><pre><code>using NUnit.Framework;
-
-public class CartTests
+    double Generate(Random rnd);
+}</code></pre><p>Любое наше распределение должно уметь вернуть double, используя переданный Random. До этого шага такого интерфейса в проекте не было.</p><p><button class="demo-button" type="button" data-demo="step-5">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-6" class="panel"><div class="overline">Фрагмент 6</div><h3>Вот откуда берётся UniformDistribution</h3><p><strong>Куда:</strong> Создай UniformDistribution.cs.</p><pre data-complete="true"><code>public class UniformDistribution : IContinuousDistribution
 {
-    [Test]
-    public void EmptyCartHasZeroTotal()
+    private readonly double min;
+    private readonly double max;
+
+    public UniformDistribution(double min, double max)
     {
-        Assert.That(new Cart().Total, Is.EqualTo(0m));
+        this.min = min;
+        this.max = max;
     }
-}
 
-public class Cart
-{
-    public decimal Total { get; } = 0m;
-}</code></pre><p class="say">«Мы добавили метод с Test. Код запуска тестов не переписывали, но новый тест появился в списке. Фреймворк смотрит на методы и атрибуты — как наш генератор на свойства кота».</p><details class="teacher"><summary>Что показать и где здесь рефлексия?</summary><p>Это пример для проекта с NUnit. Покажи знакомый студентам список тестов в IDE и атрибут Test. NUnit исследует методы через сведения о типах; Test отмечает метод как тестовый. Сам атрибут метод не запускает: это делает тестовый фреймворк. Писать свой NUnit на паре не нужно. <a href="https://docs.nunit.org/articles/nunit/writing-tests/attributes/test.html">Что означает Test</a>.</p></details></article>
-<details><summary>3. Запрос из браузера попал в метод C# — как?</summary><p>Фрагмент контроллера ASP.NET Core: клиент запрашивает <code>GET /cats/42</code>, сервис возвращает кота.</p><pre><code>[ApiController]
-[Route("cats")]
-public class CatsController : ControllerBase
-{
-    [HttpGet("{id}")]
-    public IActionResult Get(int id)
-        =&gt; Ok(new { Id = id, Name = "Барсик" });
-}</code></pre><p class="say">«Браузер прислал URL, а сервер вызвал Get с числом 42. Откуда он узнал про этот метод? MVC обнаруживает контроллеры и читает их описание, в том числе атрибуты маршрутов».</p><p>Фрагмент требует веб-проекта и <code>using Microsoft.AspNetCore.Mvc;</code>. На паре достаточно показать связь: URL → атрибут → метод. Сведения о контроллерах подготавливаются заранее; это не поиск всех методов заново на каждый запрос. Minimal API может регистрировать обработчик явно — механизм зависит от способа построения приложения. <a href="https://learn.microsoft.com/en-us/aspnet/core/mvc/advanced/app-parts?view=aspnetcore-8.0">Обнаружение контроллеров в MVC</a>.</p></details>
-<details><summary>4. Плагин: дополнительный модуль из DLL</summary><p>Конкретный пример — дополнительные эффекты обработки изображений в Paint.NET. Их устанавливают как DLL, после чего в редакторе появляются новые команды. <a href="https://paint.net/doc/latest/InstallPlugins.html">Установка расширений Paint.NET</a>.</p><p>Ниже учебная модель такого подключения, а не код Paint.NET: приложение отчётов загружает CsvExporter.dll, чтобы появился новый формат экспорта. DLL — отдельная библиотека с кодом. У модулей есть общий интерфейс:</p><pre><code>public interface IReportExporter
-{
-    void Export();
-}
-
-public class CsvExporter : IReportExporter
-{
-    public void Export() =&gt; Console.WriteLine("Экспорт в CSV");
-}</code></pre><p>Приложение знает интерфейс IReportExporter. Подключённая библиотека содержит CsvExporter. Сначала библиотеку загружают, затем ищут в ней подходящий класс. Во фрагменте переменная assembly — уже загруженная библиотека; остальные части показаны выше.</p><pre><code>var type = assembly.GetTypes().First(t =&gt;
-    typeof(IReportExporter).IsAssignableFrom(t)
-    &amp;&amp; t.IsClass &amp;&amp; !t.IsAbstract);
-var exporter = (IReportExporter)Activator.CreateInstance(type)!;
-exporter.Export();</code></pre><p class="say">«Основная программа не знает имя CsvExporter. Она ищет реализацию интерфейса. Когда объект создан, мы вызываем обычный метод интерфейса».</p><p>Это схема, а не готовый загрузчик: здесь предполагаются одна подходящая реализация и публичный конструктор без параметров. Рефлексия нужна при подключении модуля; каждый Export можно вызывать напрямую. <a href="https://learn.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support">Пример приложения с плагинами</a>.</p></details>
-</section><section id="bridge"><div class="overline">20–30 · от рабочего решения к активности</div><h2>2. SetValue работает. Что мы хотим изменить?</h2>
-<p>В исходной практике этот код допустим и решает задачу. Сначала свойства и распределения нашли по атрибутам, затем каждому новому объекту присваивают числа:</p><pre><code>public T Generate(Random rnd)
-{
-    var obj = new T();
-    foreach (var (property, distribution) in distributions)
-        property.SetValue(obj, distribution.Generate(rnd));
-    return obj;
-}</code></pre><p>Здесь <code>distributions</code> — сохранённый набор пар «описание свойства → распределение». Один вызов Generate создаёт один объект, проходит по этим парам и заполняет свойства.</p>
-<p><strong>Почему можно оставить так?</strong> Потому что это корректный универсальный способ. Для небольшого числа объектов он может быть вполне достаточным. Сам факт использования рефлексии не делает код плохим.</p>
-<p><strong>Почему меняем в активности?</strong> По условию в Generate не должно остаться рефлексии. Мы хотим убрать повторные SetValue и подготовить функцию, которая сразу создаёт объект и присваивает нужные значения. Имена свойств и выбранные распределения после подготовки не меняются, меняются только объекты и случайные числа.</p>
-<h3>Какой от этого профит в обычной программе?</h3>
-<p>Меньше работы на каждый объект, если объектов много. Свойства мы уже сохранили: речь сейчас не о повторном поиске, а о самом присваивании.</p><pre><code>// Через рефлексию:
-property.SetValue(cat, value);
-
-// Присваивание, которое может выполнять подготовленная функция:
-cat.Sleep = value;</code></pre>
-<p>SetValue — универсальный механизм для разных объектов и свойств. Значение он принимает через object. При передаче double число упаковывается в объект — это boxing, дополнительные расходы времени и памяти. Подготовленная функция знает конкретное свойство и тип значения; такое присваивание обходится без SetValue и этой упаковки.</p>
-<p>Допустим, создаём миллион объектов с десятью заполняемыми свойствами. Это десять миллионов присваиваний. Даже небольшой расход на одно присваивание повторяется десять миллионов раз. Приём может пригодиться при массовом создании объектов, преобразовании моделей и заполнении объектов из данных.</p>
-<p>Но построение дерева и Compile тоже стоят времени:</p><pre><code>С рефлексией:
-подготовка + много универсальных присваиваний
-
-С фабрикой:
-подготовка + построение и Compile + много обычных присваиваний</code></pre>
-<p>Для пяти объектов фабрика может оказаться дороже. При большом количестве объектов подготовка может окупиться. Конкретный выигрыш измеряют на своей нагрузке: современные .NET оптимизируют и саму рефлексию. Если основное время уходит на ожидание базы или сети, ускорение присваиваний может почти не изменить общее время. <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-8/">Оптимизации вызовов рефлексии и делегатов в .NET</a>.</p>
-<div class="teacher panel"><h3>Что сказать группе</h3><p>«SetValue работает правильно. Но при массовой генерации мы много раз платим за универсальность. Попробуем один раз подготовить функцию для конкретного класса, чтобы дальше выполнять готовые присваивания».</p></div>
-<h3>Когда класс известен: напишем функцию руками</h3>
-<h3>Откуда взялся UniformDistribution?</h3>
-<p>Это небольшой учебный класс, добавленный специально для показов на сайте. Его код полностью приведён ниже и включён в запускаемые примеры. В исходном проекте практики он не требуется: там используй NormalDistribution, ExponentialDistribution и другие реализации IContinuousDistribution.</p>
-<pre><code>public class UniformDistribution(double min, double max)
-    : IContinuousDistribution
-{
     public double Generate(Random rnd)
-    {
-        return min + rnd.NextDouble() * (max - min);
-    }
-}</code></pre>
-<p>Random.NextDouble() даёт число от 0 включительно до 1 не включительно. Для границ 12 и 20 формула выглядит так: <code>12 + случайноеЧисло * 8</code>. Если случайноеЧисло равно 0.5, получим 16; если 0.25 — 14. Так растягиваем исходный диапазон и сдвигаем его к нужной нижней границе. Это равномерное распределение, а не нормальное или экспоненциальное.</p>
-<p>Интерфейс IContinuousDistribution объявлен в полном примере и содержит метод <code>double Generate(Random rnd)</code>. Генератору достаточно этого контракта: способ получения числа зависит от выбранного распределения.</p>
-<p>Теперь фрагмент с Cat и этим распределением. У Cat точно есть Sleep и Audacity:</p><pre><code>IContinuousDistribution sleepDistribution = new UniformDistribution(12, 20);
-IContinuousDistribution audacityDistribution = new UniformDistribution(1, 10);
+        =&gt; min + rnd.NextDouble() * (max - min);
+}</code></pre><p>Это наш учебный класс, не скрытая библиотека. Для границ 12 и 20 формула: 12 + случайное число от 0 до 1 * 8. При 0.5 получится 16. В домашке уже есть нормальное и экспоненциальное распределения — используй их.</p><p><button class="demo-button" type="button" data-demo="step-6">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-7" class="panel"><div class="overline">Фрагмент 7</div><h3>Объявить настройку для свойства</h3><p><strong>Куда:</strong> Создай FromDistributionAttribute.cs.</p><pre data-complete="true"><code>[AttributeUsage(AttributeTargets.Property)]
+public class FromDistributionAttribute : Attribute
+{
+    public Type Distribution { get; }
+    public object[] Parameters { get; }
 
-Func&lt;Random, Cat&gt; factory = rnd =&gt; new Cat
+    public FromDistributionAttribute(Type distribution, params object[] parameters)
+    {
+        Distribution = distribution;
+        Parameters = parameters;
+    }
+}</code></pre><p>Атрибут хранит тип распределения и параметры. Он сам не создаёт распределение и не генерирует числа.</p><p><button class="demo-button" type="button" data-demo="step-7">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-8" class="panel"><div class="overline">Фрагмент 8</div><h3>Добавить атрибуты коту</h3><p><strong>Куда:</strong> в Cat.cs, отдельной строкой непосредственно перед объявлением Sleep.</p><pre data-complete="true"><code>[FromDistribution(typeof(UniformDistribution), 12.0, 20.0)]</code></pre><p><strong>Куда:</strong> в Cat.cs, отдельной строкой непосредственно перед объявлением Audacity.</p><pre data-complete="true"><code>[FromDistribution(typeof(UniformDistribution), 1.0, 10.0)]</code></pre><p>Сами свойства не удаляй и не добавляй повторно. Name остаётся без атрибута.</p><p><button class="demo-button" type="button" data-demo="step-8">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-9" class="panel"><div class="overline">Фрагмент 9</div><h3>Прочитать настройку и создать распределение</h3><p><strong>Куда:</strong> Добавь в конец Main.</p><pre data-complete="true"><code>var sleepProperty = catType.GetProperty(nameof(Cat.Sleep))!;
+var setting = sleepProperty.GetCustomAttribute&lt;FromDistributionAttribute&gt;()!;
+Console.WriteLine($&quot;Распределение: {setting.Distribution.Name}&quot;);
+Console.WriteLine($&quot;Параметры: {string.Join(&quot;, &quot;, setting.Parameters)}&quot;);
+
+var parameterTypes = setting.Parameters.Select(p =&gt; p.GetType()).ToArray();
+var constructor = setting.Distribution.GetConstructor(parameterTypes)!;
+var sampleDistribution = (IContinuousDistribution)constructor.Invoke(setting.Parameters);
+var random = new Random(42);
+Console.WriteLine($&quot;Одно число: {sampleDistribution.Generate(random):F2}&quot;);</code></pre><p>Тип и аргументы взяли из атрибута. GetConstructor находит подходящий конструктор, Invoke вызывает его. После создания работаем через интерфейс и обычный Generate. В этом показе настройка известна и корректна; общий генератор ниже проверит интерфейс и наличие конструктора.</p><p><strong>После запуска:</strong> Название UniformDistribution, параметры 12 и 20, затем число в выбранном диапазоне.</p><p><button class="demo-button" type="button" data-demo="step-9">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-10" class="panel"><div class="overline">Фрагмент 10</div><h3>Теперь появляется сам Generator<T></h3><p><strong>Куда:</strong> Создай Generator.cs.</p><pre data-complete="true"><code>using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+
+public class Generator&lt;T&gt; where T : new()
+{
+    private readonly Dictionary&lt;PropertyInfo, IContinuousDistribution&gt; distributions;
+
+    public Generator()
+    {
+        distributions = CreateDistributionsFromAttributes();
+    }
+
+    public T Generate(Random rnd)
+    {
+        var obj = new T();
+        foreach (var (property, distribution) in distributions)
+            property.SetValue(obj, distribution.Generate(rnd));
+        return obj;
+    }
+
+    private static Dictionary&lt;PropertyInfo, IContinuousDistribution&gt;
+        CreateDistributionsFromAttributes()
+    {
+        var result = new Dictionary&lt;PropertyInfo, IContinuousDistribution&gt;();
+        foreach (var property in typeof(T).GetProperties())
+        {
+            var attribute = property.GetCustomAttribute&lt;FromDistributionAttribute&gt;();
+            if (attribute == null) continue;
+            if (!typeof(IContinuousDistribution).IsAssignableFrom(attribute.Distribution))
+                throw new ArgumentException($&quot;{attribute.Distribution.Name} is not a distribution&quot;);
+            var types = attribute.Parameters.Select(p =&gt; p.GetType()).ToArray();
+            var constructor = attribute.Distribution.GetConstructor(types)
+                ?? throw new ArgumentException($&quot;Constructor not found: {attribute.Distribution.Name}&quot;);
+            var distribution = (IContinuousDistribution)constructor.Invoke(attribute.Parameters);
+            result.Add(property, distribution);
+        }
+        return result;
+    }
+}</code></pre><p>Этот класс объявлен здесь целиком. T — тип создаваемого объекта. new() разрешает создать new T(), но не обещает свойств Sleep или Audacity. Поэтому общий код читает свойства по атрибутам. Конструктор сохраняет настройки, Generate создаёт объекты.</p><p><button class="demo-button" type="button" data-demo="step-10">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-11" class="panel"><div class="overline">Фрагмент 11</div><h3>Использовать уже объявленный Generator</h3><p><strong>Куда:</strong> Добавь в конец Main.</p><pre data-complete="true"><code>var generator = new Generator&lt;Cat&gt;();
+for (var i = 0; i &lt; 3; i++)
+{
+    var generatedCat = generator.Generate(random);
+    Console.WriteLine($&quot;Кот: сон {generatedCat.Sleep:F2}, наглость {generatedCat.Audacity:F2}&quot;);
+}</code></pre><p>random уже создан на шаге чтения атрибута. При new Generator<Cat>() запускается конструктор из предыдущего шага. Подготовка один раз; три вызова Generate используют сохранённые распределения.</p><p><strong>После запуска:</strong> Три кота со случайными значениями Sleep и Audacity. Старый вывод остаётся выше — мы добавляем показы к тому же Main.</p><p><button class="demo-button" type="button" data-demo="step-11">Посмотреть весь проект после этого шага ↓</button></p></article></section><section id="expressions"><h2>3. Обычная функция и описание функции</h2><article id="step-12" class="panel"><div class="overline">Фрагмент 12</div><h3>Та же задача обычной функцией для Cat</h3><p><strong>Куда:</strong> Добавь в конец Main.</p><pre data-complete="true"><code>IContinuousDistribution sleepDistribution = new UniformDistribution(12, 20);
+IContinuousDistribution audacityDistribution = new UniformDistribution(1, 10);
+Func&lt;Random, Cat&gt; knownFactory = rnd =&gt; new Cat
 {
     Sleep = sleepDistribution.Generate(rnd),
     Audacity = audacityDistribution.Generate(rnd)
 };
-
-var random = new Random(42);
-var first = factory(random);
-var second = factory(random);
-Console.WriteLine($&quot;Сон первого: {first.Sleep:F2}&quot;);
-Console.WriteLine($&quot;Сон второго: {second.Sleep:F2}&quot;);</code></pre>
-<p>Вызов factory создаёт нового кота. Распределения были созданы заранее; Generate у распределения вызывается заново для каждого кота. SetValue здесь не нужен: присваивания записаны в обычном C#.</p>
-<h3>Почему то же самое нельзя написать для произвольного T?</h3>
-<p>Вот попытка, которая <strong>не скомпилируется</strong>:</p><pre><code>public class Generator&lt;T&gt; where T : new()
-{
-    public T Generate(Random rnd)
-    {
-        var obj = new T();
-        obj.Sleep = 16; // Ошибка: у T не обещано свойство Sleep.
-        return obj;
-    }
-}</code></pre>
-<p>Ограничение <code>where T : new()</code> обещает только возможность создать T без аргументов. Про Sleep оно ничего не говорит. Наш генератор должен подходить и коту со Sleep, и показанию датчика с Temperature.</p>
-<p>В месте вызова <code>new Generator&lt;Cat&gt;()</code> класс известен. Но тело общего Generator&lt;T&gt; компилятор проверяет по ограничениям T — оно должно быть допустимо для всех подходящих типов.</p>
-<details><summary>А если добавить интерфейс со Sleep?</summary><pre><code>public interface ISleeping
-{
-    double Sleep { get; set; }
-}
-// При where T : ISleeping, new() обращение obj.Sleep допустимо.</code></pre><p>Это хороший вариант, если всем объектам действительно нужен один общий контракт. Но генератор из нашей практики заполняет разные наборы свойств по атрибутам: датчику не нужно свойство Sleep. Здесь такой контракт не решает исходную задачу.</p></details>
-<h3>Для неизвестного набора свойств: построим функцию по описанию</h3>
-<p>При создании Generator&lt;Cat&gt; мы получим пары Sleep → распределение сна и Audacity → распределение наглости. При создании Generator&lt;SensorReading&gt; — Temperature → своё распределение. Один алгоритм строит для каждого T свою функцию.</p>
-<div class="flow"><span>Атрибуты T</span><b>→</b><span>Свойство + распределение</span><b>→</b><span>Дерево присваиваний</span><b>→</b><span>Func&lt;Random, T&gt;</span></div>
-<p>Ключевой метод целиком. Ниже разберём каждый его узел отдельно:</p><pre><code>private static Func&lt;Random, T&gt; CreateFactory(
-        Dictionary&lt;PropertyInfo, IContinuousDistribution&gt; distributions)
-    {
-        var rnd = Expression.Parameter(typeof(Random), &quot;rnd&quot;);
-        var generateMethod = typeof(IContinuousDistribution)
-            .GetMethod(nameof(IContinuousDistribution.Generate))!;
-        var bindings = new List&lt;MemberAssignment&gt;();
-
-        foreach (var (property, distribution) in distributions)
-        {
-            var distributionNode = Expression.Constant(
-                distribution, typeof(IContinuousDistribution));
-            var generateCall = Expression.Call(distributionNode, generateMethod, rnd);
-            bindings.Add(Expression.Bind(property, generateCall));
-        }
-
-        var body = Expression.MemberInit(Expression.New(typeof(T)), bindings);
-        var tree = Expression.Lambda&lt;Func&lt;Random, T&gt;&gt;(body, rnd);
-        return tree.Compile();
-    }</code></pre>
-<p><code>Expression.Bind(property, generateCall)</code> — место, где найденное описание свойства превращается в описание присваивания. Для Cat получится Sleep = вызов распределения сна; для датчика — Temperature = вызов его распределения. Писать имена этих свойств в общем алгоритме не требуется.</p>
-<h3>Один генераторный код — два разных класса</h3><pre><code>var cats = new Generator&lt;Cat&gt;();
-var sensors = new Generator&lt;SensorReading&gt;();
-var random = new Random(42);
-
-var cat = cats.Generate(random);
-var sensor = sensors.Generate(random);
-Console.WriteLine(cat.Sleep);
-Console.WriteLine(sensor.Temperature);</code></pre>
-<p>Весь пример вместе с классами, атрибутом, распределением и генератором можно открыть и выполнить. Это отдельный учебный файл; он не требует проекта домашки.</p>
-<p><button type="button" class="demo-button" data-demo="generic">Запустить: коты и датчики одним Generator&lt;T&gt; ↓</button> · <a href="v2-code/generic.cs" download>Скачать полный пример</a></p>
-<div class="teacher callout"><strong>Готовая реплика</strong><p>«Мы можем оставить SetValue, и программа будет работать. В активности делаем следующий шаг: один раз смотрим на свойства конкретного T и собираем для него функцию. При создании следующего объекта используем уже готовую функцию».</p></div>
-</section><section id="performance"><div class="overline">20–30 · перед деревьями</div><h2>Почему рефлексия может быть медленнее?</h2>
-<p>Сравни два способа изменить сон кота:</p><pre><code>cat.Sleep = 16;
-
-typeof(Cat).GetProperty("Sleep")!.SetValue(cat, 16.0);</code></pre>
-<p>В первой строке компилятор уже знает класс, свойство и тип значения. Во второй программе сначала нужно найти описание свойства, а затем выполнить присваивание через общий механизм, подходящий для разных классов.</p>
-<div class="teacher callout"><strong>Готовая реплика</strong><p>«Если ты знаешь нужную дверь, сразу открываешь её. Если знаешь только название кабинета, сначала ищешь его в списке. Рефлексия полезна, когда кабинет заранее неизвестен. Но искать его снова перед каждым входом незачем».</p></div>
-<h3>Здесь три разных расхода</h3>
-<ol><li><strong>Найти описание.</strong> GetProperty ищет подходящее свойство по имени. GetProperties возвращает массив описаний. Чтение атрибутов тоже требует работы и может создавать объекты атрибутов. Среда .NET кэширует часть сведений, но повторные обращения не становятся бесплатными.</li><li><strong>Выполнить универсальный вызов.</strong> SetValue принимает объект и значение через object. Механизму нужно работать с реальным свойством и совместимостью переданных данных. При прямом обращении многие проверки уже сделал компилятор.</li><li><strong>Передать значения через object.</strong> double — значимый тип. Для SetValue число упаковывается в объект: boxing. Если таких присваиваний много, появляются дополнительные выделения памяти и работа сборщика мусора.</li></ol>
-<p>Само <code>typeof(Cat)</code> не ищет все свойства и не вызывает их. Нельзя называть любую операцию с Type одинаково дорогой. Современный .NET заметно оптимизирует вызовы рефлексии; фиксированного множителя «всегда в сто раз медленнее» нет. <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-8/">Разбор оптимизаций reflection в .NET 8</a>.</p>
-<h3>Почему тогда ей пользуются?</h3>
-<p>У JSON-библиотеки тысячи неизвестных ей классов. Она узнаёт их свойства общим способом — разработчику не приходится писать отдельный сериализатор для каждого заказа, клиента и товара. У расширений из DLL типы приходят из подключаемой библиотеки: например, новый модуль экспорта CSV для приложения отчётов. В таких случаях небольшая подготовка позволяет убрать много ручного кода.</p>
-<p>Но <code>cat.Sleep = 16</code> не нуждается в такой универсальности. Прямой код проще, и переименование свойства проверяется компилятором. Слова «рефлексия медленная» недостаточно: нужно понимать, какая именно операция повторяется и сколько раз.</p>
-<h3>Первый шаг: убрать повторный поиск</h3>
-<p>Неудачный вариант: поиск в каждом проходе. Во фрагментах <code>cats</code> — готовый список котов.</p><pre><code>foreach (var cat in cats)
-    typeof(Cat).GetProperty(nameof(Cat.Sleep))!.SetValue(cat, 16.0);</code></pre>
-<p>Лучше: свойство найти один раз.</p><pre><code>var sleepProperty = typeof(Cat).GetProperty(nameof(Cat.Sleep))!;
-foreach (var cat in cats)
-    sleepProperty.SetValue(cat, 16.0);</code></pre>
-<p>Мы убрали поиск из цикла. Сам SetValue и передача double через object остались. Это уже полезное улучшение, но условие активности «в Generate нет рефлексии» ещё не выполнено.</p>
-<h3>Второй шаг: подготовить вызов</h3>
-<p>Если нужен только один известный по сигнатуре метод, можно получить типизированный делегат. У свойства есть метод записи — setter:</p><pre><code>var sleepProperty = typeof(Cat).GetProperty(nameof(Cat.Sleep))!;
-var setSleep = sleepProperty.SetMethod!
-    .CreateDelegate&lt;Action&lt;Cat, double&gt;&gt;();
-
-foreach (var cat in cats)
-    setSleep(cat, 16.0);</code></pre>
-<p>Здесь предполагается публичный setter double-свойства у класса Cat. Поиск и подготовка сделаны заранее. Цикл вызывает делегат с конкретными типами аргументов. Если нужна целая функция — создать объект и заполнить несколько свойств — её удобно собрать деревом выражения. Именно это сделаем в активности. <a href="https://learn.microsoft.com/en-us/dotnet/api/system.reflection.methodinfo">CreateDelegate</a>.</p>
-<h3>Третий шаг: не тратить подготовку на каждый объект</h3><p>Сначала вариант, где подготовка ошибочно находится внутри Generate:</p><pre><code>// Неудачно: вся подготовка повторяется при каждом вызове.
-public T Generate(Random rnd)
-{
-    var distributions = CreateDistributionsFromAttributes();
-    var factory = CreateFactory(distributions); // Здесь строится дерево и вызывается Compile.
-    return factory(rnd);
-}</code></pre><p>Переносим её в конструктор. Теперь видно, где объявлено поле и кто его заполняет. Это устройство класса; полные реализации двух вспомогательных методов доступны по кнопке ниже.</p><pre><code>public class Generator&lt;T&gt; where T : new()
-{
-    private readonly Func&lt;Random, T&gt; factory;
-
-    public Generator()
-    {
-        var distributions = CreateDistributionsFromAttributes();
-        factory = CreateFactory(distributions); // Дерево и Compile один раз на генератор.
-    }
-
-    public T Generate(Random rnd)
-    {
-        return factory(rnd); // Только вызов готовой функции.
-    }
-
-    // Два вспомогательных метода показаны в полном примере по кнопке ниже:
-    // CreateDistributionsFromAttributes: читает свойства и создаёт распределения.
-    // CreateFactory: из этих пар собирает дерево и возвращает tree.Compile().
-}</code></pre><p><strong>Когда вызывается конструктор?</strong> При <code>new Generator&lt;Cat&gt;()</code>. Здесь читаются атрибуты, создаются распределения, строится дерево и сохраняется результат Compile.</p><pre><code>var generator = new Generator&lt;Cat&gt;(); // Подготовка один раз.
-var random = new Random(42);
-var first = generator.Generate(random); // Новый кот, новые числа.
-var second = generator.Generate(random); // Ещё один кот; подготовки нет.</code></pre><p>Если писать <code>new Generator&lt;Cat&gt;().Generate(random)</code> для каждого кота, подготовка снова будет повторяться. Один экземпляр генератора используй для нескольких объектов.</p><p><button type="button" class="demo-button" data-demo="generic">Открыть весь класс с конструктором и всеми методами ↓</button> · <a href="v2-code/generic.cs" download>Скачать полный запускаемый код</a></p><div class="table-wrap"><table><thead><tr><th>Антипаттерн</th><th>Как делать</th></tr></thead><tbody>
-<tr><td>Искать свойства и читать атрибуты в каждом Generate.</td><td>Один раз подготовить свойства и распределения в конструкторе.</td></tr>
-<tr><td>Использовать поиск по строке для заранее известного свойства.</td><td>Прямое обращение. Если рефлексия нужна, nameof помогает избежать опечаток, но не проверяет результат поиска.</td></tr>
-<tr><td>После обнаружения плагина каждый раз вызывать MethodInfo.Invoke.</td><td>Создать объект и работать через общий интерфейс; для подходящего метода можно подготовить делегат.</td></tr>
-<tr><td>Выбирать метод только по имени.</td><td>Проверять тип-владелец и нужную сигнатуру; у методов бывают перегрузки.</td></tr>
-<tr><td>Молча пропускать некорректную настройку атрибута.</td><td>При подготовке проверить интерфейс распределения, конструктор и допустимые свойства; сообщить, какой тип или свойство не подходит.</td></tr>
-<tr><td>Класть подготовленные данные в общий изменяемый Dictionary и дописывать из разных потоков.</td><td>Для учебного генератора достаточно readonly поля экземпляра. Общие данные подготавливать один раз и затем только читать; readonly запрещает замену поля, но не изменения словаря.</td></tr>
-<tr><td>Считать Compile универсальным ускорителем.</td><td>Подготовить один раз, сравнить на своей нагрузке. Учесть среду: браузер и Native AOT имеют особенности исполнения деревьев.</td></tr>
-</tbody></table></div>
-<details class="teacher"><summary>Как объяснить, когда ускорение вообще важно</summary><p>Для нескольких объектов разница может быть незаметна, а построение дерева займёт больше времени. При массовой генерации небольшая лишняя работа повторяется много раз. В веб-запросе главную задержку может давать база или сеть: ускорение присваивания не устранит ожидание базы. Начинай с простого кода, потом измеряй. При сравнении отдельно учитывай подготовку генератора и многократные вызовы Generate; не сравнивай первый холодный запуск одного варианта с прогретым запуском другого.</p></details>
-<div class="teacher panel"><h3>Одна фраза, которую стоит оставить группе</h3><p>«Рефлексией один раз узнаём, как работать с типом. Потом по возможности работаем через подготовленный план, делегат или интерфейс».</p></div>
-</section>
-<section id="expressions"><div class="overline">30–40 · два маленьких показа</div><h2>3. Функция и описание функции</h2><pre><code>Func&lt;int, int&gt; function = x =&gt; x + 1;
-Expression&lt;Func&lt;int, int&gt;&gt; tree = x =&gt; x + 1;</code></pre><p><code>function(5)</code> выполняет действие и возвращает 6. <code>tree</code> хранит описание: «взять аргумент x и прибавить 1». Из описания можно узнать, какая операция записана.</p><pre><code>Console.WriteLine(tree);               // x =&gt; (x + 1)
-Console.WriteLine(tree.Body.NodeType); // Add
-var preparedFunction = tree.Compile();
-Console.WriteLine(preparedFunction(5)); // 6</code></pre><p class="say">«Compile подготавливает делегат. Он не подставляет пятёрку и не считает ответ заранее. Аргумент придёт потом, когда мы вызовем функцию.»</p><h3>Теперь собираем то же самое сами</h3><pre><code>var x = Expression.Parameter(typeof(int), &quot;x&quot;);
-var one = Expression.Constant(1);
-var sum = Expression.Add(x, one);
-var tree = Expression.Lambda&lt;Func&lt;int, int&gt;&gt;(sum, x);</code></pre><div class="tree"><div class="tree-root">Lambda: x → результат</div><div class="tree-root">Add</div><div class="tree-leaves"><span>Parameter: x</span><span>Constant: 1</span></div></div><p class="say">«Сначала сделали детали: аргумент и число. Потом сложение из этих деталей. Потом целую функцию: её тело — сложение, её аргумент — x.»</p><p><button type="button" class="demo-button" data-demo="tree">Открыть и запустить этот пример ↓</button></p><div class="teacher callout"><strong>Тебе для объяснения</strong><p>В редакторе поменяй Expression.Constant(1) на Expression.Constant(10). После запуска ручное дерево даст 15, исходная лямбда — 6. Здесь меняется описание будущего действия.</p></div><h3>В реальности: как из условия C# получается SQL</h3>
-<p>В приложении есть класс Order с decimal-свойством Total и таблица заказов. Хотим получить заказы дороже 1000 рублей. В проекте с EF Core пишем:</p><pre><code>using Microsoft.EntityFrameworkCore;
-
-var query = db.Orders.Where(order =&gt; order.Total &gt; 1000m);
-// Здесь записали запрос. Результаты ещё не загружены.
-var orders = await query.ToListAsync();
-// Теперь запрос выполнен и результат собран в список.</code></pre>
-<p>Переменная db — настроенный контекст EF Core. Этот фрагмент требует проекта с базой. Ниже рассмотрим отдельно условие: для этого база не нужна.</p>
-<h3>Шаг 1. Компилятор создаёт описание условия</h3><pre><code>Expression&lt;Func&lt;Order, bool&gt;&gt; condition = order =&gt; order.Total &gt; 1000m;</code></pre>
-<p>У Queryable.Where параметр условия имеет тип Expression&lt;Func&lt;Order, bool&gt;&gt;. Поэтому компилятор может представить лямбду деревом. В случае списка Enumerable.Where получает Func&lt;Order, bool&gt; и вызывает его для элементов в памяти.</p>
-<div class="tree"><div class="tree-root">Lambda: order → bool</div><div class="tree-root">GreaterThan: сравнить &gt;</div><div class="tree-leaves"><span>MemberAccess: order.Total</span><span>Constant: 1000m</span></div></div>
-<p>Body — выражение справа от стрелки. У него две части: слева обращение к свойству, справа число. Из дерева можно прочитать эти части:</p><pre><code>var comparison = (BinaryExpression)condition.Body;
-var member = (MemberExpression)comparison.Left;
-var constant = (ConstantExpression)comparison.Right;
-
-Console.WriteLine(comparison.NodeType); // GreaterThan
-Console.WriteLine(member.Member.Name); // Total
-Console.WriteLine(constant.Value);     // 1000</code></pre>
-<p>Приведения здесь допустимы для показанной конкретной лямбды. В общем переводчике нужно проверять вид каждого узла — именно это делает полный пример ниже.</p>
-<h3>Шаг 2. Переводчик сопоставляет части дерева с SQL</h3>
-<div class="table-wrap"><table><thead><tr><th>В дереве C#</th><th>В запросе к базе</th></tr></thead><tbody><tr><td>order.Total</td><td>Столбец Total — по настройкам модели.</td></tr><tr><td>GreaterThan</td><td>Оператор &gt;.</td></tr><tr><td>Число 1000m</td><td>Литерал или параметр запроса, в зависимости от запроса и провайдера.</td></tr></tbody></table></div>
-<p>В учебном переводчике выберем параметр: получим <code>WHERE [Total] &gt; @p0</code> и отдельно значение <code>@p0 = 1000</code>. Квадратные скобки здесь — выбранная для показа форма SQL Server. Полный мини-переводчик:</p><pre><code>using System;
-using System.Linq.Expressions;
-
-Expression&lt;Func&lt;Order, bool&gt;&gt; condition = order =&gt; order.Total &gt; 1000m;
-Console.WriteLine($&quot;Условие: {condition}&quot;);
-var comparison = (BinaryExpression)condition.Body;
-var member = (MemberExpression)comparison.Left;
-var constant = (ConstantExpression)comparison.Right;
-Console.WriteLine($&quot;Операция: {comparison.NodeType}&quot;);
-Console.WriteLine($&quot;Свойство: {member.Member.Name}&quot;);
-Console.WriteLine($&quot;Значение: {constant.Value}&quot;);
-
-var (sql, parameter) = Translate(condition);
-Console.WriteLine(sql);
-Console.WriteLine($&quot;Параметр @p0: {parameter}&quot;);
-
-// Учебная модель: только order.Total &gt; число типа decimal.
-// Никакого подключения к базе здесь нет.
-static (string Sql, decimal Parameter) Translate(Expression&lt;Func&lt;Order, bool&gt;&gt; tree)
-{
-    if (tree.Body is not BinaryExpression { NodeType: ExpressionType.GreaterThan } comparison)
-        throw new ArgumentException(&quot;Поддерживаем только сравнение &gt;&quot;);
-    if (comparison.Left is not MemberExpression member
-        || member.Expression != tree.Parameters[0]
-        || member.Member.DeclaringType != typeof(Order)
-        || member.Member.Name != nameof(Order.Total))
-        throw new ArgumentException(&quot;Слева должно быть свойство order.Total&quot;);
-    if (comparison.Right is not ConstantExpression { Value: decimal value })
-        throw new ArgumentException(&quot;Справа должно быть постоянное число decimal&quot;);
-    return (&quot;WHERE [Total] &gt; @p0&quot;, value);
-}
-
-public class Order
-{
-    public decimal Total { get; set; }
-}</code></pre>
-<p><button type="button" class="demo-button" data-demo="sql">Запустить разбор дерева и перевод в условие SQL ↓</button> · <a href="v2-code/sql.cs" download>Скачать пример</a></p>
-<div class="teacher callout"><strong>Что показать</strong><p>Запусти пример. Покажи три части дерева и получившуюся строку WHERE. Можно поменять 1000m на 2000m: изменится значение параметра. Это учебный переводчик одного случая, а не внутренний код EF Core. Он не подключается к базе.</p></div>
-<h3>Шаг 3. Что дополнительно делает настоящий EF Core?</h3>
-<ol><li>Получает описание всего запроса: источник Orders, Where и другие добавленные операции.</li><li>Использует настройки модели: как Order и его свойства соответствуют таблице и столбцам.</li><li>Провайдер конкретной базы переводит поддерживаемые операции в SQL. Подготовленные результаты обработки могут кэшироваться.</li><li>При ToListAsync отправляет команду через драйвер базы. База выполняет условие и возвращает строки.</li><li>EF Core превращает строки результата в объекты Order. В этом примере ты получаешь список заказов.</li></ol>
-<p>Подробности: <a href="https://learn.microsoft.com/en-us/ef/core/querying/">обработка запросов EF Core</a>.</p>
-<h3>Как посмотреть настоящий SQL в своём проекте</h3><pre><code>var query = db.Orders.Where(order =&gt; order.Total &gt; 1000m);
-Console.WriteLine(query.ToQueryString()); // SQL для отладки.
-var orders = await query.ToListAsync();</code></pre>
-<p>ToQueryString показывает представление SQL для отладки; он сам не загружает заказы. Для фактически выполняемой команды можно включить логирование EF Core. <a href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.toquerystring">Документация ToQueryString</a>.</p>
-<details><summary>Почему произвольная C#-функция может не перевестись?</summary><pre><code>var query = db.Orders.Where(order =&gt; Pricing.IsExpensive(order));
-
-public static class Pricing
-{
-    public static bool IsExpensive(Order order) =&gt; order.Total &gt; 1000m;
-}</code></pre>
-<p>Это пример проблемы, а не рекомендуемый запрос. Вместо GreaterThan в условии появился узел Call пользовательской функции. Дерево хранит вызов, но не раскрывает тело обычного C#-метода. Провайдеру нужен способ перевести именно этот метод в SQL. Если такого способа нет, фильтрация обычно завершится ошибкой перевода. Запиши само условие в лямбде или предоставь поддерживаемое отображение функции.</p></details>
-<p class="say">«Мы прочитали дерево и получили SQL. В активности прочитаем свойства и построим другое дерево — создание объекта. Его превратим в делегат через Compile. Это два разных применения описания кода».</p>
-</section><section id="factory"><div class="overline">40–60 · разобрать вместе</div><h2>4. Собираем фабрику одного кота</h2><p class="say">«Мы хотим получить функцию, которая создаёт кота и заполняет Sleep случайным числом. Сейчас соберём описание этой функции по частям».</p><p class="teacher">Сначала покажи обычную функцию, которую хотим получить. Переменная distribution уже содержит созданное распределение.</p><pre><code>rnd =&gt; new Cat { Sleep = distribution.Generate(rnd) }</code></pre><h3>Шаг 1. Аргумент rnd</h3><pre><code>var rnd = Expression.Parameter(typeof(Random), &quot;rnd&quot;);</code></pre><p>Это место для генератора случайных чисел, который передадут позже. Один и тот же объект rnd используй во всём дереве. Одинаковое имя у двух разных ParameterExpression не делает их одним аргументом.</p><h3>Шаг 2. Уже созданное распределение</h3><pre><code>var distributionNode = Expression.Constant(
-    distribution, typeof(IContinuousDistribution));</code></pre><p>В дерево кладём ссылку на распределение. Оно сохранится в подготовленной функции. Это не сгенерированное число.</p><h3>Шаг 3. Будущий вызов Generate</h3><pre><code>var generateMethod = typeof(IContinuousDistribution)
+var handmadeCat = knownFactory(random);
+Console.WriteLine($&quot;Обычная функция: сон {handmadeCat.Sleep:F2}&quot;);</code></pre><p>Cat, интерфейс и распределение уже объявлены. Эта функция присваивает свойства напрямую. Для произвольного T так написать нельзя: у T не обещаны эти имена. Поэтому в активности соберём такую функцию из описаний свойств.</p><p><strong>После запуска:</strong> Ещё один кот, созданный обычной функцией без SetValue.</p><p><button class="demo-button" type="button" data-demo="step-12">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-13" class="panel"><div class="overline">Фрагмент 13</div><h3>Выполнить функцию и посмотреть её описание</h3><p><strong>Куда:</strong> Добавь в конец Main.</p><pre data-complete="true"><code>Func&lt;int, int&gt; addOne = x =&gt; x + 1;
+Expression&lt;Func&lt;int, int&gt;&gt; simpleTree = x =&gt; x + 1;
+Console.WriteLine($&quot;Func: {addOne(5)}&quot;);
+Console.WriteLine($&quot;Дерево: {simpleTree}&quot;);
+Console.WriteLine($&quot;Операция: {simpleTree.Body.NodeType}&quot;);
+var addOneFromTree = simpleTree.Compile();
+Console.WriteLine($&quot;После Compile: {addOneFromTree(5)}&quot;);</code></pre><p>Func можно вызвать. Expression хранит дерево — видно Add. Compile превращает дерево в вызываемый делегат. Значение 5 приходит при вызове, а не при Compile.</p><p><strong>После запуска:</strong> 6; описание x + 1; Add; ещё раз 6.</p><p><button class="demo-button" type="button" data-demo="step-13">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-14" class="panel"><div class="overline">Фрагмент 14</div><h3>Собрать такое дерево вручную</h3><p><strong>Куда:</strong> Добавь в конец Main.</p><pre data-complete="true"><code>var xParameter = Expression.Parameter(typeof(int), &quot;x&quot;);
+var oneNode = Expression.Constant(1);
+var sumNode = Expression.Add(xParameter, oneNode);
+var manualTree = Expression.Lambda&lt;Func&lt;int, int&gt;&gt;(sumNode, xParameter);
+Console.WriteLine($&quot;Собрали вручную: {manualTree}&quot;);
+Console.WriteLine(manualTree.Compile()(5));</code></pre><p>Сначала аргумент и число, затем сложение, затем лямбда. Один и тот же xParameter используем в теле и в Lambda. Его имя — подпись; важен сам объект ParameterExpression.</p><p><strong>После запуска:</strong> То же дерево и результат 6.</p><p><button class="demo-button" type="button" data-demo="step-14">Посмотреть весь проект после этого шага ↓</button></p></article></section><section id="factory"><h2>4. Собираем фабрику по частям</h2><p class="say">«Нам нужна функция, которая создаёт кота и заполняет Sleep случайным числом. Сейчас соберём описание этой функции по частям».</p><article id="step-15" class="panel"><div class="overline">Фрагмент 15</div><h3>Начать дерево фабрики: аргумент и распределение</h3><p><strong>Куда:</strong> Добавь в конец Main.</p><pre data-complete="true"><code>var rndParameter = Expression.Parameter(typeof(Random), &quot;rnd&quot;);
+var distributionNode = Expression.Constant(
+    sleepDistribution, typeof(IContinuousDistribution));</code></pre><p>sleepDistribution создан на шаге обычной функции. В Constant кладём ссылку на него, не случайное число. rndParameter — место для будущего аргумента.</p><p><button class="demo-button" type="button" data-demo="step-15">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-16" class="panel"><div class="overline">Фрагмент 16</div><h3>Записать будущий вызов Generate</h3><p><strong>Куда:</strong> Добавь в конец Main.</p><pre data-complete="true"><code>var generateMethod = typeof(IContinuousDistribution)
     .GetMethod(nameof(IContinuousDistribution.Generate))!;
-var generateCall = Expression.Call(distributionNode, generateMethod, rnd);</code></pre><p>GetMethod получает описание метода сейчас. Call записывает вызов на потом: объект, метод, аргумент. Число ещё не генерируется. Вызов метода интерфейса работает с любым распределением, реализующим этот интерфейс.</p><h3>Шаг 4. Пара Sleep = значение</h3><pre><code>var sleepProperty = typeof(Cat).GetProperty(nameof(Cat.Sleep))!;
-var sleepBinding = Expression.Bind(sleepProperty, generateCall);</code></pre><p>Bind связывает свойство с выражением справа. Здесь справа будущий вызов распределения, а не уже вычисленное число.</p><h3>Шаг 5. Новый кот и его свойства</h3><pre><code>var body = Expression.MemberInit(
-    Expression.New(typeof(Cat)),
-    sleepBinding);</code></pre><p>New описывает создание кота. MemberInit добавляет инициализацию свойств — фигурные скобки после new Cat. Для нескольких свойств передаём несколько Bind.</p><h3>Шаг 6. Целая функция и Compile</h3><pre><code>var tree = Expression.Lambda&lt;Func&lt;Random, Cat&gt;&gt;(body, rnd);
-var factory = tree.Compile();
-var cat = factory(new Random());</code></pre><p>Lambda объединяет тело и аргумент. Func<Random, Cat> означает: принять Random, вернуть Cat. Compile выполняем один раз. Только последний вызов создаёт кота и генерирует Sleep.</p><p><button type="button" class="demo-button" data-demo="factory">Открыть и запустить этот пример ↓</button></p><div class="teacher callout"><strong>Тебе для объяснения</strong><p>Запусти полный пример: одна factory создаёт трёх котов с разными значениями. Распределение здесь равномерное, чтобы показ помещался в один файл. В активности используй распределения из практики, включая нормальное и экспоненциальное.</p></div><div class="table-wrap"><table><thead><tr><th>Кусок обычного кода</th><th>Узел дерева</th></tr></thead><tbody><tr><td>аргумент rnd</td><td>Parameter</td></tr><tr><td>ссылка на distribution</td><td>Constant</td></tr><tr><td>distribution.Generate(rnd)</td><td>Call</td></tr><tr><td>Sleep = ...</td><td>Bind</td></tr><tr><td>new Cat()</td><td>New</td></tr><tr><td>new Cat { Sleep = ... }</td><td>MemberInit</td></tr><tr><td>rnd => ...</td><td>Lambda</td></tr></tbody></table></div></section><section id="activity"><div class="overline">60–85 · работа студентов</div><h2>5. Активность «Случайные объекты 2»</h2><div class="panel"><p>Ускорь Generator&lt;T&gt; из своей практики. Построй дерево функции создания объекта и скомпилируй его в конструкторе генератора. При вызове Generate не должно быть рефлексии.</p><pre><code>(Random rnd) =&gt; new T()
+var generateCall = Expression.Call(distributionNode, generateMethod, rndParameter);</code></pre><p>GetMethod получает описание метода сейчас. Call описывает вызов distribution.Generate(rnd) на потом. Здесь не создаётся кот и не генерируется число.</p><p><button class="demo-button" type="button" data-demo="step-16">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-17" class="panel"><div class="overline">Фрагмент 17</div><h3>Создание кота и присваивание Sleep</h3><p><strong>Куда:</strong> Добавь в конец Main.</p><pre data-complete="true"><code>var sleepBinding = Expression.Bind(sleepProperty, generateCall);
+var catBody = Expression.MemberInit(Expression.New(typeof(Cat)), sleepBinding);</code></pre><p>sleepProperty уже найден при чтении атрибута. Bind — пара Sleep = результат будущего вызова. New описывает создание Cat, MemberInit добавляет инициализацию свойства.</p><p><button class="demo-button" type="button" data-demo="step-17">Посмотреть весь проект после этого шага ↓</button></p></article><article id="step-18" class="panel"><div class="overline">Фрагмент 18</div><h3>Подготовить функцию и создать трёх котов</h3><p><strong>Куда:</strong> Добавь в конец Main.</p><pre data-complete="true"><code>var catTree = Expression.Lambda&lt;Func&lt;Random, Cat&gt;&gt;(catBody, rndParameter);
+Console.WriteLine($&quot;Фабрика деревом: {catTree}&quot;);
+var preparedFactory = catTree.Compile();
+for (var i = 0; i &lt; 3; i++)
 {
-    Prop1 = distribution1.Generate(rnd),
-    Prop2 = distribution2.Generate(rnd)
-};</code></pre><p>Это образец того, какую функцию должно описывать дерево. Prop1 и Prop2 обозначают свойства, найденные по атрибутам.</p></div><h3>Что оставить от домашки</h3><p>Поиск свойств и создание распределений по атрибутам оставь в подготовке. Нужен набор пар: <code>PropertyInfo → IContinuousDistribution</code>. Добавь поле <code>Func&lt;Random, T&gt; factory</code>.</p><pre><code>private readonly Func&lt;Random, T&gt; factory;
-
-public Generator()
-{
-    var distributions = CreateDistributionsFromAttributes();
-    factory = CreateFactory(distributions);
-}
-
-public T Generate(Random rnd) =&gt; factory(rnd);</code></pre><h3>Что студенты дописывают</h3><ol><li>В CreateFactory создай один Parameter для Random.</li><li>Для каждой пары свойство–распределение собери Call и Bind. Добавь Bind в список.</li><li>Создай New для typeof(T), оберни в MemberInit со всем списком.</li><li>Создай Lambda&lt;Func&lt;Random, T&gt;&gt; и вызови Compile.</li><li>Удали SetValue и другие вызовы рефлексии из Generate.</li></ol><pre><code>var bindings = new List&lt;MemberAssignment&gt;();
-foreach (var (property, distribution) in distributions)
-{
-    // Здесь Constant → Call → Bind.
-    // bindings.Add(...);
-}
-// Затем New → MemberInit → Lambda → Compile.</code></pre><div class="teacher callout"><strong>Тебе для объяснения</strong><p>Если застряли, открой шаги 3–5 и покажи, что вместо sleepProperty теперь берётся property из цикла. Вместо typeof(Cat) — typeof(T). Остальные детали те же. Не требуй написать весь код из головы.</p></div><h3>Как проверить результат на паре</h3><ul><li>Generate состоит из вызова factory(rnd). SetValue, Invoke, GetProperty и чтение атрибутов выполняются только при подготовке.</li><li>Два помеченных double-свойства получают свои распределения.</li><li>Свойство без атрибута сохраняет значение, заданное конструктором или инициализатором.</li><li>Повторные вызовы с одним Random создают новые объекты и продолжают случайную последовательность.</li></ul><details class="teacher"><summary>Разбор для преподавателя: CreateFactory и подготовка</summary><p>Код для существующего проекта Reflection.Randomness. Интерфейс и распределения бери из проекта. Если атрибут уже определён, используй своё определение, не добавляй второй класс.</p><pre><code>using System;
+    var preparedCat = preparedFactory(random);
+    Console.WriteLine($&quot;Из дерева: сон {preparedCat.Sleep:F2}&quot;);
+}</code></pre><p>Lambda соединяет тело и аргумент. Compile вызван один раз. Только preparedFactory(random) создаёт кота и выбирает новое число. Audacity мы в это дерево не включали, поэтому у этих котов она равна 0.</p><p><strong>После запуска:</strong> Описание фабрики и три значения сна. При каждом вызове появляется новый объект.</p><p><button class="demo-button" type="button" data-demo="step-18">Посмотреть весь проект после этого шага ↓</button></p></article></section><section id="activity"><h2>Активность «Случайные объекты 2»</h2><div class="panel"><p>Студенты теперь работают самостоятельно в проекте своей практики. Нужно строить дерево функции создания T и вызывать Compile в конструкторе генератора. В Generate не должно быть рефлексии.</p></div><p>Мы уже собрали функцию для одного Cat и одного свойства. В активности вместо одного Bind соберём список Bind по всем помеченным свойствам T.</p><ol><li>Сохрани поиск атрибутов и создание распределений из домашки.</li><li>Добавь поле Func&lt;Random, T&gt; factory.</li><li>В конструкторе после получения пар свойство–распределение вызови CreateFactory.</li><li>В CreateFactory создай один Parameter для Random. Для каждой пары собери Constant → Call → Bind и добавь Bind в список.</li><li>New создаёт typeof(T). MemberInit получает список Bind.</li><li>Lambda&lt;Func&lt;Random, T&gt;&gt; и Compile дают готовую функцию.</li><li>Generate только возвращает factory(rnd).</li></ol><div class="teacher callout"><strong>Если застряли</strong><p>Покажи шаги 15–18: sleepProperty теперь берём из цикла по свойствам, sleepDistribution — из пары, а typeof(Cat) заменяем на typeof(T). Объявления интерфейса и распределений уже есть в домашке, второй раз их добавлять не нужно.</p></div><h3>Проверить результат</h3><p>Один генератор используется для нескольких Generate. Конструктор подготавливает фабрику один раз; вызовы фабрики создают новые объекты и генерируют новые числа. Свойства без атрибута сохраняют начальные значения. SetValue и Invoke не должны оставаться на пути создания каждого объекта.</p><details class="teacher"><summary>Полный вариант для разбора после активности</summary><p>Самодостаточный пример с Cat и SensorReading. Его можно открыть отдельно; это готовое решение, а не следующий фрагмент для добавления к Main.</p><pre data-complete="true"><code>using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Reflection.Randomness;
+
+
+var random = new Random(42);
+var cats = new Generator&lt;Cat&gt;();
+var sensors = new Generator&lt;SensorReading&gt;();
+for (var i = 0; i &lt; 3; i++)
+{
+    var cat = cats.Generate(random);
+    var sensor = sensors.Generate(random);
+    Console.WriteLine($&quot;Кот: сон {cat.Sleep:F2}, наглость {cat.Audacity:F2}&quot;);
+    Console.WriteLine($&quot;Датчик: температура {sensor.Temperature:F2}&quot;);
+}
+
+public class Cat
+{
+    [FromDistribution(typeof(UniformDistribution), 12.0, 20.0)]
+    public double Sleep { get; set; }
+    [FromDistribution(typeof(UniformDistribution), 1.0, 10.0)]
+    public double Audacity { get; set; }
+}
+public class SensorReading
+{
+    [FromDistribution(typeof(UniformDistribution), -10.0, 30.0)]
+    public double Temperature { get; set; }
+}
+public interface IContinuousDistribution
+{
+    double Generate(Random rnd);
+}
+public class UniformDistribution(double min, double max) : IContinuousDistribution
+{
+    public double Generate(Random rnd) =&gt; min + rnd.NextDouble() * (max - min);
+}
 
 public class Generator&lt;T&gt; where T : new()
 {
@@ -411,4 +236,227 @@ public class FromDistributionAttribute(Type distribution, params object[] parame
 {
     public Type Distribution { get; } = distribution;
     public object[] Parameters { get; } = parameters;
-}</code></pre><p><a href="v2-code/Generator.cs" download>Скачать Generator.cs</a>. Учебные условия: публичные записываемые свойства double, параметры распределений не null, конструктор без параметров у T. Вызов идёт через метод интерфейса, поэтому не зависит от имени конкретного распределения.</p></details></section><section id="playground"><h2>Показы: запускай и меняй C#</h2><p>Выбери пример. Все пять самодостаточны; код выполняется в браузере после нажатия кнопки.</p><div class="downloads"><button type="button" class="demo-button" data-demo="reflection">Рефлексия</button><button type="button" class="demo-button" data-demo="tree">Дерево x + 1</button><button type="button" class="demo-button" data-demo="factory">Фабрика котов</button><button type="button" class="demo-button" data-demo="generic">Общий Generator&lt;T&gt;</button><button type="button" class="demo-button" data-demo="sql">Дерево → SQL</button></div><p id="runtime-state" role="status">Загружаю .NET…</p><label for="v2-editor">Код примера</label><textarea id="v2-editor" spellcheck="false" aria-label="Редактор C#"></textarea><div class="downloads"><button id="v2-run" type="button" disabled>Запустить C#</button><button id="v2-reset" type="button">Вернуть пример</button><button id="v2-restart" type="button">Перезапустить .NET</button></div><h3>Результат</h3><pre><code id="v2-output" aria-live="polite">Здесь появится вывод программы.</code></pre><p class="caption">Эти примеры показывает преподаватель. Для времени исполнения и сравнения производительности используй обычный .NET в IDE. В браузере деревья могут выполняться интерпретатором; Compile не гарантирует генерацию машинного кода или ускорение в любой среде.</p><iframe id="v2-runner" src="runner/index.html" title="Среда исполнения C#" hidden></iframe></section><section id="finish"><h2>Закончить тремя вопросами</h2><ol><li>Когда мы узнаём свойства и создаём распределения?</li><li>Когда строится и компилируется дерево?</li><li>Когда вызывается distribution.Generate(rnd)?</li></ol><div class="teacher callout"><strong>Тебе для объяснения</strong><p>Первые два действия — в конструкторе генератора. Третье — при каждом вызове подготовленной factory. Константа в дереве хранит распределение, а Call описывает будущий вызов. Если число сгенерировать при сборке и положить в Constant, все объекты получат одно заранее выбранное значение.</p></div><h3>Если спросят, стоит ли всегда так делать</h3><p>Для известного свойства пиши прямое обращение. Рефлексия полезна, когда библиотека должна работать с разными типами. Деревья полезны, когда код нужно исследовать, переводить или собирать программно. Подготовка функции занимает время: оправданность оптимизации проверяют измерением. Генерация при сборке — ещё один подход, например у System.Text.Json.</p><p><a href="https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/expression-trees-building">Microsoft: сборка деревьев</a> · <a href="https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/expression-trees-execution">Compile и выполнение</a> · <a href="https://learn.microsoft.com/en-us/ef/core/performance/advanced-performance-topics">EF Core: обработка деревьев запросов</a></p></section><footer>Пара v2 · Рефлексия и подготовленная фабрика объектов</footer></main></div><script src="script.js"></script><script src="v2-examples.js"></script><script src="v2.js"></script></body></html>
+}</code></pre><p><a href="v2-code/generic.cs" download>Скачать полное решение отдельно</a></p></details></section><section id="realworld"><h2>Почему это встречается в обычном коде</h2><p>На паре достаточно JSON и NUnit. HTTP и плагины можно раскрыть, если останется время.</p><article class="panel"><h3>1. Отправить заказ в JSON</h3><p>В сервисе интернет-магазина нужно передать заказ другому сервису. Разработчик пишет:</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>using System.Text.Json;
+using System.Text.Json.Serialization;
+
+var order = new Order { Id = 42, Total = 1290m };
+Console.WriteLine(JsonSerializer.Serialize(order));
+
+public class Order
+{
+    public int Id { get; set; }
+    public decimal Total { get; set; }
+    [JsonIgnore]
+    public string InternalComment { get; set; } = "Скидку согласовали";
+}</code></pre><p>Результат: <code>{"Id":42,"Total":1290}</code>. Внутренний комментарий в JSON не попал.</p><p class="say">«Мы не писали цикл по свойствам заказа. Библиотека сама узнала про Id и Total, прочитала JsonIgnore и пропустила комментарий. Наш генератор котов тоже читает свойства и их настройки».</p><details class="teacher"><summary>Где именно здесь рефлексия?</summary><p>В обычном режиме System.Text.Json получает сведения о типах через рефлексию и кэширует их. Вызов Serialize скрывает эту работу. Сведения также можно подготовить при сборке с помощью source generator — поэтому нельзя утверждать, что любой JSON всегда делается рефлексией.</p><p>Это полный пример для консольного проекта .NET 8. Встроенная лаборатория использует ограниченный набор библиотек; этот пример запускай в IDE. <a href="https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/reflection-vs-source-generation">Как устроены два режима System.Text.Json</a>.</p></details></article>
+<article class="panel"><h3>2. Почему кнопка «Запустить тесты» находит твой метод?</h3><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>using NUnit.Framework;
+
+public class CartTests
+{
+    [Test]
+    public void EmptyCartHasZeroTotal()
+    {
+        Assert.That(new Cart().Total, Is.EqualTo(0m));
+    }
+}
+
+public class Cart
+{
+    public decimal Total { get; } = 0m;
+}</code></pre><p class="say">«Мы добавили метод с Test. Код запуска тестов не переписывали, но новый тест появился в списке. Фреймворк смотрит на методы и атрибуты — как наш генератор на свойства кота».</p><details class="teacher"><summary>Что показать и где здесь рефлексия?</summary><p>Это пример для проекта с NUnit. Покажи знакомый студентам список тестов в IDE и атрибут Test. NUnit исследует методы через сведения о типах; Test отмечает метод как тестовый. Сам атрибут метод не запускает: это делает тестовый фреймворк. Писать свой NUnit на паре не нужно. <a href="https://docs.nunit.org/articles/nunit/writing-tests/attributes/test.html">Что означает Test</a>.</p></details></article>
+<details><summary>3. Запрос из браузера попал в метод C# — как?</summary><p>Фрагмент контроллера ASP.NET Core: клиент запрашивает <code>GET /cats/42</code>, сервис возвращает кота.</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>[ApiController]
+[Route("cats")]
+public class CatsController : ControllerBase
+{
+    [HttpGet("{id}")]
+    public IActionResult Get(int id)
+        =&gt; Ok(new { Id = id, Name = "Барсик" });
+}</code></pre><p class="say">«Браузер прислал URL, а сервер вызвал Get с числом 42. Откуда он узнал про этот метод? MVC обнаруживает контроллеры и читает их описание, в том числе атрибуты маршрутов».</p><p>Фрагмент требует веб-проекта и <code>using Microsoft.AspNetCore.Mvc;</code>. На паре достаточно показать связь: URL → атрибут → метод. Сведения о контроллерах подготавливаются заранее; это не поиск всех методов заново на каждый запрос. Minimal API может регистрировать обработчик явно — механизм зависит от способа построения приложения. <a href="https://learn.microsoft.com/en-us/aspnet/core/mvc/advanced/app-parts?view=aspnetcore-8.0">Обнаружение контроллеров в MVC</a>.</p></details>
+<details><summary>4. Плагин: дополнительный модуль из DLL</summary><p>Конкретный пример — дополнительные эффекты обработки изображений в Paint.NET. Их устанавливают как DLL, после чего в редакторе появляются новые команды. <a href="https://paint.net/doc/latest/InstallPlugins.html">Установка расширений Paint.NET</a>.</p><p>Ниже учебная модель такого подключения, а не код Paint.NET: приложение отчётов загружает CsvExporter.dll, чтобы появился новый формат экспорта. DLL — отдельная библиотека с кодом. У модулей есть общий интерфейс:</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>public interface IReportExporter
+{
+    void Export();
+}
+
+public class CsvExporter : IReportExporter
+{
+    public void Export() =&gt; Console.WriteLine("Экспорт в CSV");
+}</code></pre><p>Приложение знает интерфейс IReportExporter. Подключённая библиотека содержит CsvExporter. Сначала библиотеку загружают, затем ищут в ней подходящий класс. Во фрагменте переменная assembly — уже загруженная библиотека; остальные части показаны выше.</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>var type = assembly.GetTypes().First(t =&gt;
+    typeof(IReportExporter).IsAssignableFrom(t)
+    &amp;&amp; t.IsClass &amp;&amp; !t.IsAbstract);
+var exporter = (IReportExporter)Activator.CreateInstance(type)!;
+exporter.Export();</code></pre><p class="say">«Основная программа не знает имя CsvExporter. Она ищет реализацию интерфейса. Когда объект создан, мы вызываем обычный метод интерфейса».</p><p>Это схема, а не готовый загрузчик: здесь предполагаются одна подходящая реализация и публичный конструктор без параметров. Рефлексия нужна при подключении модуля; каждый Export можно вызывать напрямую. <a href="https://learn.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support">Пример приложения с плагинами</a>.</p></details>
+</section><section id="performance"><div class="overline">20–30 · перед деревьями</div><h2>Почему рефлексия может быть медленнее?</h2>
+<p>Сравни два способа изменить сон кота:</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>cat.Sleep = 16;
+
+typeof(Cat).GetProperty("Sleep")!.SetValue(cat, 16.0);</code></pre>
+<p>В первой строке компилятор уже знает класс, свойство и тип значения. Во второй программе сначала нужно найти описание свойства, а затем выполнить присваивание через общий механизм, подходящий для разных классов.</p>
+<div class="teacher callout"><strong>Готовая реплика</strong><p>«Если ты знаешь нужную дверь, сразу открываешь её. Если знаешь только название кабинета, сначала ищешь его в списке. Рефлексия полезна, когда кабинет заранее неизвестен. Но искать его снова перед каждым входом незачем».</p></div>
+<h3>Здесь три разных расхода</h3>
+<ol><li><strong>Найти описание.</strong> GetProperty ищет подходящее свойство по имени. GetProperties возвращает массив описаний. Чтение атрибутов тоже требует работы и может создавать объекты атрибутов. Среда .NET кэширует часть сведений, но повторные обращения не становятся бесплатными.</li><li><strong>Выполнить универсальный вызов.</strong> SetValue принимает объект и значение через object. Механизму нужно работать с реальным свойством и совместимостью переданных данных. При прямом обращении многие проверки уже сделал компилятор.</li><li><strong>Передать значения через object.</strong> double — значимый тип. Для SetValue число упаковывается в объект: boxing. Если таких присваиваний много, появляются дополнительные выделения памяти и работа сборщика мусора.</li></ol>
+<p>Само <code>typeof(Cat)</code> не ищет все свойства и не вызывает их. Нельзя называть любую операцию с Type одинаково дорогой. Современный .NET заметно оптимизирует вызовы рефлексии; фиксированного множителя «всегда в сто раз медленнее» нет. <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-8/">Разбор оптимизаций reflection в .NET 8</a>.</p>
+<h3>Почему тогда ей пользуются?</h3>
+<p>У JSON-библиотеки тысячи неизвестных ей классов. Она узнаёт их свойства общим способом — разработчику не приходится писать отдельный сериализатор для каждого заказа, клиента и товара. У расширений из DLL типы приходят из подключаемой библиотеки: например, новый модуль экспорта CSV для приложения отчётов. В таких случаях небольшая подготовка позволяет убрать много ручного кода.</p>
+<p>Но <code>cat.Sleep = 16</code> не нуждается в такой универсальности. Прямой код проще, и переименование свойства проверяется компилятором. Слова «рефлексия медленная» недостаточно: нужно понимать, какая именно операция повторяется и сколько раз.</p>
+<h3>Первый шаг: убрать повторный поиск</h3>
+<p>Неудачный вариант: поиск в каждом проходе. Во фрагментах <code>cats</code> — готовый список котов.</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>foreach (var cat in cats)
+    typeof(Cat).GetProperty(nameof(Cat.Sleep))!.SetValue(cat, 16.0);</code></pre>
+<p>Лучше: свойство найти один раз.</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>var sleepProperty = typeof(Cat).GetProperty(nameof(Cat.Sleep))!;
+foreach (var cat in cats)
+    sleepProperty.SetValue(cat, 16.0);</code></pre>
+<p>Мы убрали поиск из цикла. Сам SetValue и передача double через object остались. Это уже полезное улучшение, но условие активности «в Generate нет рефлексии» ещё не выполнено.</p>
+<h3>Второй шаг: подготовить вызов</h3>
+<p>Если нужен только один известный по сигнатуре метод, можно получить типизированный делегат. У свойства есть метод записи — setter:</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>var sleepProperty = typeof(Cat).GetProperty(nameof(Cat.Sleep))!;
+var setSleep = sleepProperty.SetMethod!
+    .CreateDelegate&lt;Action&lt;Cat, double&gt;&gt;();
+
+foreach (var cat in cats)
+    setSleep(cat, 16.0);</code></pre>
+<p>Здесь предполагается публичный setter double-свойства у класса Cat. Поиск и подготовка сделаны заранее. Цикл вызывает делегат с конкретными типами аргументов. Если нужна целая функция — создать объект и заполнить несколько свойств — её удобно собрать деревом выражения. Именно это сделаем в активности. <a href="https://learn.microsoft.com/en-us/dotnet/api/system.reflection.methodinfo">CreateDelegate</a>.</p>
+<h3>Третий шаг: не тратить подготовку на каждый объект</h3><p>Сначала вариант, где подготовка ошибочно находится внутри Generate:</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>// Неудачно: вся подготовка повторяется при каждом вызове.
+public T Generate(Random rnd)
+{
+    var distributions = CreateDistributionsFromAttributes();
+    var factory = CreateFactory(distributions); // Здесь строится дерево и вызывается Compile.
+    return factory(rnd);
+}</code></pre><p>Переносим её в конструктор. Теперь видно, где объявлено поле и кто его заполняет. Это устройство класса; полные реализации двух вспомогательных методов доступны по кнопке ниже.</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>public class Generator&lt;T&gt; where T : new()
+{
+    private readonly Func&lt;Random, T&gt; factory;
+
+    public Generator()
+    {
+        var distributions = CreateDistributionsFromAttributes();
+        factory = CreateFactory(distributions); // Дерево и Compile один раз на генератор.
+    }
+
+    public T Generate(Random rnd)
+    {
+        return factory(rnd); // Только вызов готовой функции.
+    }
+
+    // Два вспомогательных метода показаны в полном примере по кнопке ниже:
+    // CreateDistributionsFromAttributes: читает свойства и создаёт распределения.
+    // CreateFactory: из этих пар собирает дерево и возвращает tree.Compile().
+}</code></pre><p><strong>Когда вызывается конструктор?</strong> При <code>new Generator&lt;Cat&gt;()</code>. Здесь читаются атрибуты, создаются распределения, строится дерево и сохраняется результат Compile.</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>var generator = new Generator&lt;Cat&gt;(); // Подготовка один раз.
+var random = new Random(42);
+var first = generator.Generate(random); // Новый кот, новые числа.
+var second = generator.Generate(random); // Ещё один кот; подготовки нет.</code></pre><p>Если писать <code>new Generator&lt;Cat&gt;().Generate(random)</code> для каждого кота, подготовка снова будет повторяться. Один экземпляр генератора используй для нескольких объектов.</p><p><button type="button" class="demo-button" data-demo="generic">Открыть весь класс с конструктором и всеми методами ↓</button> · <a href="v2-code/generic.cs" download>Скачать полный запускаемый код</a></p><div class="table-wrap"><table><thead><tr><th>Антипаттерн</th><th>Как делать</th></tr></thead><tbody>
+<tr><td>Искать свойства и читать атрибуты в каждом Generate.</td><td>Один раз подготовить свойства и распределения в конструкторе.</td></tr>
+<tr><td>Использовать поиск по строке для заранее известного свойства.</td><td>Прямое обращение. Если рефлексия нужна, nameof помогает избежать опечаток, но не проверяет результат поиска.</td></tr>
+<tr><td>После обнаружения плагина каждый раз вызывать MethodInfo.Invoke.</td><td>Создать объект и работать через общий интерфейс; для подходящего метода можно подготовить делегат.</td></tr>
+<tr><td>Выбирать метод только по имени.</td><td>Проверять тип-владелец и нужную сигнатуру; у методов бывают перегрузки.</td></tr>
+<tr><td>Молча пропускать некорректную настройку атрибута.</td><td>При подготовке проверить интерфейс распределения, конструктор и допустимые свойства; сообщить, какой тип или свойство не подходит.</td></tr>
+<tr><td>Класть подготовленные данные в общий изменяемый Dictionary и дописывать из разных потоков.</td><td>Для учебного генератора достаточно readonly поля экземпляра. Общие данные подготавливать один раз и затем только читать; readonly запрещает замену поля, но не изменения словаря.</td></tr>
+<tr><td>Считать Compile универсальным ускорителем.</td><td>Подготовить один раз, сравнить на своей нагрузке. Учесть среду: браузер и Native AOT имеют особенности исполнения деревьев.</td></tr>
+</tbody></table></div>
+<details class="teacher"><summary>Как объяснить, когда ускорение вообще важно</summary><p>Для нескольких объектов разница может быть незаметна, а построение дерева займёт больше времени. При массовой генерации небольшая лишняя работа повторяется много раз. В веб-запросе главную задержку может давать база или сеть: ускорение присваивания не устранит ожидание базы. Начинай с простого кода, потом измеряй. При сравнении отдельно учитывай подготовку генератора и многократные вызовы Generate; не сравнивай первый холодный запуск одного варианта с прогретым запуском другого.</p></details>
+<div class="teacher panel"><h3>Одна фраза, которую стоит оставить группе</h3><p>«Рефлексией один раз узнаём, как работать с типом. Потом по возможности работаем через подготовленный план, делегат или интерфейс».</p></div>
+</section><section id="sql"><h2>Подробно: прочитать дерево и получить SQL</h2><p>Учебный переводчик одного условия полностью работает в чистом проекте, без EF Core и без базы:</p><p class="caption">Полный Program.cs. Замени им всё содержимое файла; ничего дописывать не нужно.</p><pre data-complete="true"><code>using System;
+using System.Linq.Expressions;
+
+Expression&lt;Func&lt;Order, bool&gt;&gt; condition = order =&gt; order.Total &gt; 1000m;
+Console.WriteLine($&quot;Условие: {condition}&quot;);
+var comparison = (BinaryExpression)condition.Body;
+var member = (MemberExpression)comparison.Left;
+var constant = (ConstantExpression)comparison.Right;
+Console.WriteLine($&quot;Операция: {comparison.NodeType}&quot;);
+Console.WriteLine($&quot;Свойство: {member.Member.Name}&quot;);
+Console.WriteLine($&quot;Значение: {constant.Value}&quot;);
+
+var (sql, parameter) = Translate(condition);
+Console.WriteLine(sql);
+Console.WriteLine($&quot;Параметр @p0: {parameter}&quot;);
+
+// Учебная модель: только order.Total &gt; число типа decimal.
+// Никакого подключения к базе здесь нет.
+static (string Sql, decimal Parameter) Translate(Expression&lt;Func&lt;Order, bool&gt;&gt; tree)
+{
+    if (tree.Body is not BinaryExpression { NodeType: ExpressionType.GreaterThan } comparison)
+        throw new ArgumentException(&quot;Поддерживаем только сравнение &gt;&quot;);
+    if (comparison.Left is not MemberExpression member
+        || member.Expression != tree.Parameters[0]
+        || member.Member.DeclaringType != typeof(Order)
+        || member.Member.Name != nameof(Order.Total))
+        throw new ArgumentException(&quot;Слева должно быть свойство order.Total&quot;);
+    if (comparison.Right is not ConstantExpression { Value: decimal value })
+        throw new ArgumentException(&quot;Справа должно быть постоянное число decimal&quot;);
+    return (&quot;WHERE [Total] &gt; @p0&quot;, value);
+}
+
+public class Order
+{
+    public decimal Total { get; set; }
+}</code></pre><div class="downloads"><a href="v2-code/sql.cs" download="Program.cs">Скачать Program.cs</a><button type="button" class="demo-button" data-demo="sql">Открыть этот файл в редакторе сайта ↓</button></div><details><summary>Разбор частей дерева и путь запроса в настоящем EF Core</summary><h3>В реальности: как из условия C# получается SQL</h3>
+<p>В приложении есть класс Order с decimal-свойством Total и таблица заказов. Хотим получить заказы дороже 1000 рублей. В проекте с EF Core пишем:</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>using Microsoft.EntityFrameworkCore;
+
+var query = db.Orders.Where(order =&gt; order.Total &gt; 1000m);
+// Здесь записали запрос. Результаты ещё не загружены.
+var orders = await query.ToListAsync();
+// Теперь запрос выполнен и результат собран в список.</code></pre>
+<p>Переменная db — настроенный контекст EF Core. Этот фрагмент требует проекта с базой. Ниже рассмотрим отдельно условие: для этого база не нужна.</p>
+<h3>Шаг 1. Компилятор создаёт описание условия</h3><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>Expression&lt;Func&lt;Order, bool&gt;&gt; condition = order =&gt; order.Total &gt; 1000m;</code></pre>
+<p>У Queryable.Where параметр условия имеет тип Expression&lt;Func&lt;Order, bool&gt;&gt;. Поэтому компилятор может представить лямбду деревом. В случае списка Enumerable.Where получает Func&lt;Order, bool&gt; и вызывает его для элементов в памяти.</p>
+<div class="tree"><div class="tree-root">Lambda: order → bool</div><div class="tree-root">GreaterThan: сравнить &gt;</div><div class="tree-leaves"><span>MemberAccess: order.Total</span><span>Constant: 1000m</span></div></div>
+<p>Body — выражение справа от стрелки. У него две части: слева обращение к свойству, справа число. Из дерева можно прочитать эти части:</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>var comparison = (BinaryExpression)condition.Body;
+var member = (MemberExpression)comparison.Left;
+var constant = (ConstantExpression)comparison.Right;
+
+Console.WriteLine(comparison.NodeType); // GreaterThan
+Console.WriteLine(member.Member.Name); // Total
+Console.WriteLine(constant.Value);     // 1000</code></pre>
+<p>Приведения здесь допустимы для показанной конкретной лямбды. В общем переводчике нужно проверять вид каждого узла — именно это делает полный пример ниже.</p>
+<h3>Шаг 2. Переводчик сопоставляет части дерева с SQL</h3>
+<div class="table-wrap"><table><thead><tr><th>В дереве C#</th><th>В запросе к базе</th></tr></thead><tbody><tr><td>order.Total</td><td>Столбец Total — по настройкам модели.</td></tr><tr><td>GreaterThan</td><td>Оператор &gt;.</td></tr><tr><td>Число 1000m</td><td>Литерал или параметр запроса, в зависимости от запроса и провайдера.</td></tr></tbody></table></div>
+<p>В учебном переводчике выберем параметр: получим <code>WHERE [Total] &gt; @p0</code> и отдельно значение <code>@p0 = 1000</code>. Квадратные скобки здесь — выбранная для показа форма SQL Server. Полный мини-переводчик:</p><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>using System;
+using System.Linq.Expressions;
+
+Expression&lt;Func&lt;Order, bool&gt;&gt; condition = order =&gt; order.Total &gt; 1000m;
+Console.WriteLine($&quot;Условие: {condition}&quot;);
+var comparison = (BinaryExpression)condition.Body;
+var member = (MemberExpression)comparison.Left;
+var constant = (ConstantExpression)comparison.Right;
+Console.WriteLine($&quot;Операция: {comparison.NodeType}&quot;);
+Console.WriteLine($&quot;Свойство: {member.Member.Name}&quot;);
+Console.WriteLine($&quot;Значение: {constant.Value}&quot;);
+
+var (sql, parameter) = Translate(condition);
+Console.WriteLine(sql);
+Console.WriteLine($&quot;Параметр @p0: {parameter}&quot;);
+
+// Учебная модель: только order.Total &gt; число типа decimal.
+// Никакого подключения к базе здесь нет.
+static (string Sql, decimal Parameter) Translate(Expression&lt;Func&lt;Order, bool&gt;&gt; tree)
+{
+    if (tree.Body is not BinaryExpression { NodeType: ExpressionType.GreaterThan } comparison)
+        throw new ArgumentException(&quot;Поддерживаем только сравнение &gt;&quot;);
+    if (comparison.Left is not MemberExpression member
+        || member.Expression != tree.Parameters[0]
+        || member.Member.DeclaringType != typeof(Order)
+        || member.Member.Name != nameof(Order.Total))
+        throw new ArgumentException(&quot;Слева должно быть свойство order.Total&quot;);
+    if (comparison.Right is not ConstantExpression { Value: decimal value })
+        throw new ArgumentException(&quot;Справа должно быть постоянное число decimal&quot;);
+    return (&quot;WHERE [Total] &gt; @p0&quot;, value);
+}
+
+public class Order
+{
+    public decimal Total { get; set; }
+}</code></pre>
+<p><button type="button" class="demo-button" data-demo="sql">Запустить разбор дерева и перевод в условие SQL ↓</button> · <a href="v2-code/sql.cs" download>Скачать пример</a></p>
+<div class="teacher callout"><strong>Что показать</strong><p>Запусти пример. Покажи три части дерева и получившуюся строку WHERE. Можно поменять 1000m на 2000m: изменится значение параметра. Это учебный переводчик одного случая, а не внутренний код EF Core. Он не подключается к базе.</p></div>
+<h3>Шаг 3. Что дополнительно делает настоящий EF Core?</h3>
+<ol><li>Получает описание всего запроса: источник Orders, Where и другие добавленные операции.</li><li>Использует настройки модели: как Order и его свойства соответствуют таблице и столбцам.</li><li>Провайдер конкретной базы переводит поддерживаемые операции в SQL. Подготовленные результаты обработки могут кэшироваться.</li><li>При ToListAsync отправляет команду через драйвер базы. База выполняет условие и возвращает строки.</li><li>EF Core превращает строки результата в объекты Order. В этом примере ты получаешь список заказов.</li></ol>
+<p>Подробности: <a href="https://learn.microsoft.com/en-us/ef/core/querying/">обработка запросов EF Core</a>.</p>
+<h3>Как посмотреть настоящий SQL в своём проекте</h3><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>var query = db.Orders.Where(order =&gt; order.Total &gt; 1000m);
+Console.WriteLine(query.ToQueryString()); // SQL для отладки.
+var orders = await query.ToListAsync();</code></pre>
+<p>ToQueryString показывает представление SQL для отладки; он сам не загружает заказы. Для фактически выполняемой команды можно включить логирование EF Core. <a href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.toquerystring">Документация ToQueryString</a>.</p>
+<details><summary>Почему произвольная C#-функция может не перевестись?</summary><p class="caption">Выдержка для объяснения; полный файл для запуска — в показах выше.</p><pre><code>var query = db.Orders.Where(order =&gt; Pricing.IsExpensive(order));
+
+public static class Pricing
+{
+    public static bool IsExpensive(Order order) =&gt; order.Total &gt; 1000m;
+}</code></pre>
+<p>Это пример проблемы, а не рекомендуемый запрос. Вместо GreaterThan в условии появился узел Call пользовательской функции. Дерево хранит вызов, но не раскрывает тело обычного C#-метода. Провайдеру нужен способ перевести именно этот метод в SQL. Если такого способа нет, фильтрация обычно завершится ошибкой перевода. Запиши само условие в лямбде или предоставь поддерживаемое отображение функции.</p></details>
+<p class="say">«Мы прочитали дерево и получили SQL. В активности прочитаем свойства и построим другое дерево — создание объекта. Его превратим в делегат через Compile. Это два разных применения описания кода».</p>
+</details></section><section id="playground"><h2>Собранный проект после выбранного шага</h2><p>Сюда загружается весь код состояния проекта. Он выполняется отдельно от IDE. Выбирай шаг кнопкой под нужным фрагментом.</p><p id="runtime-state" role="status">Загружаю .NET…</p><label for="v2-editor">Код состояния проекта</label><textarea id="v2-editor" spellcheck="false" aria-label="Редактор C#"></textarea><div class="downloads"><button id="v2-run" type="button" disabled>Запустить C#</button><button id="v2-reset" type="button">Вернуть состояние шага</button><button id="v2-restart" type="button">Перезапустить .NET</button></div><h3>Результат</h3><pre><code id="v2-output" aria-live="polite">Здесь появится вывод.</code></pre><p class="caption">Для измерений производительности используй обычный .NET в IDE. В браузере деревья могут выполняться интерпретатором.</p><iframe id="v2-runner" src="runner/index.html" title="Среда исполнения C#" hidden></iframe></section><section id="finish"><h2>Три вопроса в конце</h2><ol><li>Когда читаем атрибуты и строим фабрику?</li><li>Когда появляются объект и случайные числа?</li><li>Почему в Constant кладём распределение, а не готовое число?</li></ol><div class="teacher callout"><strong>Ответы</strong><p>При подготовке генератора; при вызове factory; чтобы Generate у распределения выполнялся заново на каждом вызове. Сам Compile значения не генерирует.</p></div></section><footer>Пара v2 · Последовательная сборка проекта</footer></main></div><script src="script.js"></script><script src="v2-examples.js"></script><script src="v2.js"></script></body></html>

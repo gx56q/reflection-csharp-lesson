@@ -4,7 +4,7 @@ const output = document.getElementById('v2-output');
 const frame = document.getElementById('v2-runner');
 const runButton = document.getElementById('v2-run');
 const status = document.getElementById('runtime-state');
-let selected = 'reflection', ready = false, running = false, request = 0;
+let selected = 'step-1', ready = false, running = false, request = 0;
 const drafts = {...examples};
 
 function controls() {
