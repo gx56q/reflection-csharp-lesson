@@ -1,56 +1,36 @@
 const teacher = document.body.dataset.view === 'teacher';
 const $ = id => document.getElementById(id);
 const esc = text => String(text).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-let scene = 0, listCase = 0, traceStep = 0, showFix = false;
-const queryScene = () => { const raw = location.hash.match(/(?:^#|&)scene=(\d+)(?:&|$)/); const n=raw ? Number(raw[1]) : 0; return Math.max(0,Math.min(scenes.length-1,n)); };
-const box = (title, text, style='') => `<div class="panel ${style}"><h2>${title}</h2><p>${text}</p></div>`;
-const chain = items => `<div class="chain">${items.map((x,i)=>`${i?'<span class="arrow" aria-hidden="true">→</span>':''}<div class="chain-item"><h2>${x[0]}</h2><p>${x[1]}</p></div>`).join('')}</div>`;
-const code = text => `<pre><code>${esc(text)}</code></pre>`;
-function listTrace() {
-  const list = listCase ? ['Анна','Вика','Борис'] : ['Анна','Борис','Вика'];
-  const frames = [{list:[...list],info:'Начальный список',i:null}];
-  for(let i=0;i<list.length;i++) {
-    const name=list[i],remove=name.length<=4;
-    if(remove) list.splice(i,1);
-    frames.push({list:[...list],info:`i = ${i}: ${name} — ${remove?'удалили':'оставили'}`,i});
-  }
-  frames.push({list:[...list],info:'Цикл завершён',i:null});
-  return frames;
-}
-function traceHtml() {
-  const frames=listTrace(),f=frames[Math.min(traceStep,frames.length-1)];
-  const original=listCase?['Анна','Вика','Борис']:['Анна','Борис','Вика'];
-  return `<div class="trace-grid"><div>${code(showFix?'names.RemoveAll(name =>\n    name.Length <= 4);':'for (var i = 0; i < names.Count; i++)\n{\n    if (names[i].Length <= 4)\n        names.RemoveAt(i);\n}')}<p class="small">C# · удаляем имена длиной ≤ 4</p></div><div class="trace-board"><div class="trace-label">До цикла</div><div class="chips">${original.map(n=>`<span>${n}</span>`).join('')}</div><div class="trace-label">${showFix?'После RemoveAll':esc(f.info)}</div><div class="chips ${!showFix&&traceStep===frames.length-1&&listCase?'wrong':''}">${(showFix?['Борис']:f.list).map((n,i)=>`<span><small>${i}</small>${n}</span>`).join('')}</div><p class="small">${showFix?'Оба порядка дают один результат.':'Трассировка алгоритма · шаг '+traceStep+' из '+(frames.length-1)}</p></div></div><div class="demo-controls"><button id="stepTrace" ${showFix||traceStep>=frames.length-1?'disabled':''}>Следующий шаг</button><button id="switchList">${listCase?'Вернуть первый список':'Поменять порядок'}</button><button id="toggleFix">${showFix?'Вернуть цикл':'Показать исправление'}</button><button id="resetTrace">Сбросить шаги</button></div>`;
-}
+let scene = 0;
+const queryScene = () => { const raw=location.hash.match(/(?:^#|&)scene=(\d+)(?:&|$)/); return Math.max(0,Math.min(scenes.length-1,raw?Number(raw[1]):0)); };
+const chain = items => `<div class="chain">${items.map((x,i)=>`${i?'<span class="arrow" aria-hidden="true">→</span>':''}<div class="card"><h2>${x[0]}</h2><p>${x[1]}</p></div>`).join('')}</div>`;
+const cards = items => `<div class="cards">${items.map(x=>`<div class="card"><h2>${x[0]}</h2><p>${x[1]}</p></div>`).join('')}</div>`;
+const sourcesHtml = s => `<footer class="sources">${s.sources.map(([t,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`).join('')}</footer>`;
 function visual(kind) {
  switch(kind) {
- case 'opening':return `<div class="opening"><h1>Fluent API<br><span>ИИ и проекты</span></h1><div class="course-rule"><strong>Домашки</strong><span>ИИ запрещён правилами курса</span><strong>Проект</strong><span>Решение и вопросы по коду</span></div></div>`;
- case 'understand':return `<h1>Понимать свой код</h1><div class="understand"><div class="large-code">input<span>↓</span>твой код<span>↓</span>result</div><div class="verbs"><div>Объяснить</div><div>Проверить</div><div>Изменить</div></div></div>`;
- case 'task':return `<h1>Сначала — задача</h1><div class="timeline"><div class="time-case"><strong>Конфликт</strong><div class="rail"><span class="booking a">10:00–11:00</span></div><div class="rail"><span class="booking b">10:30–11:30</span></div></div><div class="time-case"><strong>Можно</strong><div class="rail"><span class="booking a">10:00–11:00</span></div><div class="rail"><span class="booking c">11:00–12:00</span></div></div></div><p class="footnote">Одна комната. Конец встречи может совпадать с началом следующей.</p>`;
- case 'harness':return `<h1>Как работает агент</h1><div class="harness"><div class="harness-title">Харнесс · среда работы</div><div class="agent-loop"><div class="model"><strong>Модель</strong><p>Выбирает действие</p></div><div class="roundtrip"><span>вызов инструмента →</span><span>← результат</span></div><div class="toolbox"><strong>Инструменты</strong><span>Читать файлы</span><span>Менять код</span><span>Запускать команды</span></div></div><div class="harness-footer"><span>Контекст</span><span>Разрешения</span><span>История работы</span></div></div>`;
- case 'extensions':return `<h1>Скиллы и плагины</h1><div class="extensions"><div class="skill"><h2>Скилл</h2><p>Инструкция для задачи</p>${code('SKILL.md\n\nКак проверить C#-проект\nЧто смотреть в результате')}</div><div class="plugin"><h2>Плагин</h2><p>Устанавливаемый пакет</p><div class="plugin-parts"><div>Скиллы</div><span>и / или</span><div>Подключения<br>к инструментам</div></div></div></div><p class="footnote">Инструкция не выдаёт доступ и не гарантирует правильный результат.</p>`;
- case 'scope':return `<h1>Одно понятное изменение</h1><div class="scope"><div class="vague">«Сделай весь сервис»</div><div class="specific"><strong>Проверка пересечения брони</strong><div class="scope-details"><span>Где создаётся бронь</span><span>Два примера</span><span>Небольшой diff</span></div></div></div>`;
- case 'trace':return `<h1>Один удачный запуск</h1>${traceHtml()}`;
- case 'evidence':return `<h1>Что именно проверили</h1><div class="evidence"><div><span class="check">✓</span><h2>Собралось</h2><p>Типы и зависимости</p></div><div><span class="check">✓</span><h2>Прошёл пример</h2><p>Конкретный вход и результат</p></div><div><span class="check">✓</span><h2>Работает сценарий</h2><p>Действие в приложении</p></div></div><p class="footnote">Разные проверки отвечают на разные вопросы.</p>`;
- case 'workflow':return `<h1>Рабочий шаг с агентом</h1>${chain([['Задача','Поведение и примеры'],['Правка','Понятный diff'],['Проверка','Ожидаемый результат'],['Git','Рабочая версия']])}<div class="repeat">Следующее небольшое изменение ↶</div>`;
- case 'api':return `<h1>Первый ASP.NET API</h1><div class="request-line"><span>POST /expenses</span><code>{ "amount": 500 }</code></div>${chain([['Запрос','Сумма и категория'],['Правило','Сумма > 0'],['Хранение','Новый расход'],['Ответ','201 Created']])}<div class="rejection">amount: −500 <span>→</span> 400 Bad Request</div>`;
- case 'projects':return `<h1>Идеи проектов</h1><div class="project-prompt"><div><span class="project-label">Идея</span><strong>Для кого и зачем</strong></div><div><span class="project-label">Навыки курса</span><strong>Какие решения покажешь</strong></div><div><span class="project-label">Первая версия</span><strong>Один работающий сценарий</strong></div></div>`;
- case 'next':return `<h1>Следующий шаг</h1><div class="next-step"><div class="broad">«Сделать backend»</div><div class="concrete">Создать бронь<br><span>и отклонить пересечение</span></div></div>`;
- case 'printer':return `<h1>ObjectPrinter</h1><div class="printer"><div>${code('Person\n  Name: string\n  Age:  int')}</div><div class="printer-rules"><span>Скрыть свойство</span><span>Изменить формат</span><span>Обрезать строку</span></div></div><div class="type-access"><code>Name → TrimTo(8)</code><code class="unavailable">Age → нет TrimTo</code></div><p class="footnote">Примеры вызовов и интерфейсы · без реализации</p>`;
+ case 'overview':return `<p class="eyebrow">ИИ-агенты · вводный обзор</p><h1>От задачи<br>к изменению программы</h1>${chain([['Прочитать','Файлы и задачу'],['Изменить','Код проекта'],['Проверить','Результат работы']])}`;
+ case 'harness':return `<h1>Модель и харнесс</h1><div class="harness"><div class="tag">Харнесс — программа, которая ведёт работу</div><div class="agent-loop"><div class="card accent"><h2>Модель</h2><p>Выбирает действие</p></div><div class="roundtrip"><span>вызов →</span><span>← результат</span></div><div class="card"><h2>Инструменты</h2><p>Файлы · команды · сервисы</p></div></div><div class="harness-footer"><span>Контекст</span><span>История</span><span>Разрешения</span></div></div><p class="footnote">Следующий шаг: ещё одно действие или ответ пользователю</p>`;
+ case 'context':return `<h1>Контекст: что известно модели</h1><div class="context-flow"><div class="stack"><span>Задача пользователя</span><span>AGENTS.md и документы</span><span>Прочитанный код</span><span>Результаты инструментов</span></div><span class="arrow" aria-hidden="true">→</span><div class="context-window"><h2>Контекст</h2><p>Сведения для следующего шага</p><span class="tag">Размер ограничен</span></div></div>`;
+ case 'mcp':return `<h1>MCP: доступ к внешним данным</h1>${chain([['Приложение','Внутри — MCP-клиент'],['MCP-сервер','Предоставляет инструменты'],['Sentry','Сведения об ошибках']])}<div class="return-line">← результат запроса</div><p class="footnote">Открытый протокол · пример из документации MCP</p>`;
+ case 'skill':return `<h1>Скилл: как выполнять задачу</h1><div class="skill-flow"><div class="card"><span class="tag">Пример из документации</span><h2>GitHub Fix CI</h2><p>Разобраться с упавшей проверкой</p></div><span class="arrow" aria-hidden="true">→</span><div class="file"><strong>SKILL.md</strong><p>Когда применять<br>Порядок работы<br>Как проверить результат</p><small>+ скрипты и материалы, если нужны</small></div></div><p class="footnote">Сначала название и описание → полная инструкция по необходимости</p>`;
+ case 'plugin':return `<h1>Плагин: устанавливаемый пакет</h1><div class="plugin"><span class="tag">ChatGPT / Codex</span><div class="plugin-parts"><div><h2>Скиллы</h2><p>Инструкции</p></div><span>и / или</span><div><h2>MCP-сервер</h2><p>Инструменты и данные</p></div></div></div><p class="footnote">Плагин объединяет компоненты для установки и распространения</p>`;
+ case 'prompt':return `<h1>Понятная задача агенту</h1><div class="prompt-grid"><div><span>01</span><h2>Цель</h2><p>Что должно измениться?</p></div><div><span>02</span><h2>Контекст</h2><p>Какие файлы и ошибки важны?</p></div><div><span>03</span><h2>Ограничения</h2><p>Что нужно сохранить?</p></div><div><span>04</span><h2>Готово, когда…</h2><p>Как проверить результат?</p></div></div>`;
+ case 'verify':return `<h1>Агенту нужно видеть результат</h1>${cards([['Diff','Что изменилось в коде'],['Проверки','Вывод команд и тестов'],['Поведение','Приложение, логи, метрики']])}<div class="check-loop"><span>Изменение</span><b>→</b><span>Проверка</span><b>→</b><span>Результат</span></div><p class="footnote">Если цель не достигнута — следующий шаг исправления ↶</p>`;
+ case 'subagent':return `<h1>Субагент: часть работы отдельно</h1><div class="delegate"><div class="card accent"><h2>Основной агент</h2><p>Общая задача</p></div><div class="roundtrip"><span>подзадача →</span><span>← результат</span></div><div class="harness"><span class="tag">Отдельный контекст</span><h2>Субагент</h2><p class="mini-loop">Модель ⇄ инструменты</p></div></div><p class="footnote">Отдельный контекст ≠ автоматически отдельная копия файлов</p>`;
+ case 'coordinator':return `<h1>Координатор и специалисты</h1><div class="org"><div class="user-node">Пользователь</div><div class="vertical-label">задача ↓ &nbsp; ↑ итог</div><div class="coordinator">Координатор</div><svg class="branches" viewBox="0 0 1000 82" aria-hidden="true"><defs><marker id="a" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="currentColor"/></marker></defs><path d="M480 4V24H164V72"/><path d="M500 4V72"/><path d="M520 4V24H836V72"/><path class="return-path" d="M184 72V42H470V4"/><path class="return-path" d="M520 72V4"/><path class="return-path" d="M856 72V42H540V4"/></svg><div class="specialists"><div>Специалист A</div><div>Специалист B</div><div>Специалист C</div></div><div class="legend"><span>↓ подзадачи</span><span>↑ результаты</span></div></div><p class="footnote">Паттерн agents as tools · итог собирает координатор</p>`;
+ case 'choice':return `<h1>Один агент или несколько?</h1><div class="choice"><div><span class="tag">Один</span><h2>Короткая задача</h2><p>Шаги зависят друг от друга<br>Изменяется общий ресурс</p></div><div><span class="tag">Несколько</span><h2>Независимые подзадачи</h2><p>Можно работать параллельно<br>Результаты можно объединить</p></div></div><p class="footnote">Сравниваем качество, общее время и стоимость</p>`;
  }
 }
 function teacherHtml(s) {
- const section=(title,body)=>`<section><h2>${title}</h2>${body}</section>`;
- const paragraphs=arr=>arr.map(t=>`<p>${esc(t)}</p>`).join('');
+ const section=(t,b)=>`<section><h2>${t}</h2>${b}</section>`;
  return `<div class="teacher-heading"><span>${esc(s.time)}</span><h1>${esc(s.title)}</h1></div>`+
  section('Что сказать',`<div class="speech">${esc(s.say)}</div>`)+
- section('Для тебя',paragraphs(s.explain))+
- section('Что сделать',`<ol>${s.steps.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`)+
- section('Вопросы и ответы',s.qa.map(x=>`<details class="qa" open><summary>${esc(x.q)}</summary><p>${esc(x.a)}</p></details>`).join(''))+
- (s.code?section('Пример',`<button id="copyCode" class="copy">Копировать пример</button><span id="copyStatus" role="status"></span>${code(s.code)}<p class="code-note">${s.visual==='printer'?'Проектирование API: реализация принтера здесь отсутствует.':s.visual==='scope'?'Пример запроса к агенту для работы над проектом.':'Полный фрагмент для Program.cs консольного проекта. Веб-трассировка на слайде не запускает C#.'}</p>`):'')+
- (s.answer?`<details class="more"><summary>Один вариант интерфейсов</summary>${code(s.answer)}<p>Это сигнатуры для обсуждения. Реализации печати нет; For намеренно бросает NotImplementedException. Сборка в этой подготовке не запускалась.</p></details>`:'')+
- (s.extra?`<details class="more"><summary>Если нужно подробнее</summary><p>${esc(s.extra)}</p></details>`:'')+
- (s.sources.length?`<details class="more"><summary>Источники</summary><ul>${s.sources.map(([title,url])=>`<li><a href="${esc(url)}" target="_blank" rel="noopener">${esc(title)}</a></li>`).join('')}</ul></details>`:'');
+ section('Для тебя',s.explain.map(t=>`<p>${esc(t)}</p>`).join(''))+
+ section('На слайде',s.steps.map(t=>`<p>${esc(t)}</p>`).join(''))+
+ section('Если спросят',s.qa.map(x=>`<details class="qa" open><summary>${esc(x.q)}</summary><p>${esc(x.a)}</p></details>`).join(''))+
+ section(scene===scenes.length-1?'После показа':'Переход к следующему слайду',`<div class="transition">${esc(s.transition)}</div>`)+
+ `<details class="more"><summary>Источники и происхождение примеров</summary>${sourcesHtml(s)}<p class="source-note">Реплики — пересказ для устного объяснения, не цитаты. Дата «проверено» обозначает дату сверки документации.</p></details>`+
+ (scene===scenes.length-1?'<a class="oral-link" href="oral.html" target="_blank" rel="noopener">После показа: памятка для разговора о проектах →</a>':'');
 }
 function fit() {
  if(teacher||innerWidth<=700)return;
@@ -62,9 +42,9 @@ function fit() {
 }
 function render() {
  const s=scenes[scene];
- $('stage').innerHTML=teacher?teacherHtml(s):visual(s.visual);
+ $('stage').innerHTML=teacher?teacherHtml(s):visual(s.visual)+sourcesHtml(s);
  $('sceneSelect').value=String(scene);
- $('position').textContent=`${scene+1} / ${scenes.length}${s.time.startsWith('Запас')?' · запас':''}`;
+ $('position').textContent=`${scene+1} / ${scenes.length}`;
  $('prev').disabled=scene===0; $('next').disabled=scene===scenes.length-1;
  $('progress').style.width=((scene+1)/scenes.length*100)+'%';
  document.title=s.title+(teacher?' — конспект':' — C# практика');
@@ -72,14 +52,6 @@ function render() {
  if(teacher) {
   $('contents').innerHTML=`<p>План пары</p>${scenes.map((x,i)=>`<button data-scene="${i}" ${i===scene?'aria-current="step"':''}><span>${i+1}</span>${esc(x.title)}</button>`).join('')}`;
   for(const btn of $('contents').querySelectorAll('button'))btn.onclick=()=>go(Number(btn.dataset.scene));
-  if($('copyCode'))$('copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(s.code);$('copyStatus').textContent='Скопировано';}catch{$('copyStatus').textContent='Выдели код и скопируй вручную';}};
- }
- if(!teacher&&s.visual==='trace') {
-  const update=id=>{render();document.getElementById(id)?.focus({preventScroll:true});};
-  $('stepTrace').onclick=()=>{traceStep++;update('stepTrace');};
-  $('switchList').onclick=()=>{listCase=1-listCase;traceStep=0;showFix=false;update('switchList');};
-  $('toggleFix').onclick=()=>{showFix=!showFix;update('toggleFix');};
-  $('resetTrace').onclick=()=>{traceStep=0;showFix=false;update('resetTrace');};
  }
  requestAnimationFrame(fit);
 }
@@ -88,7 +60,7 @@ function go(n) {
  history.replaceState(null,'','#scene='+scene);
  render();window.scrollTo(0,0);
 }
-$('sceneSelect').innerHTML=scenes.map((s,i)=>`<option value="${i}">${i+1}. ${esc(s.title)}${i===scenes.length-1?' · запас':''}</option>`).join('');
+$('sceneSelect').innerHTML=scenes.map((s,i)=>`<option value="${i}">${i+1}. ${esc(s.title)}</option>`).join('');
 $('sceneSelect').onchange=e=>go(Number(e.target.value));
 $('prev').onclick=()=>go(scene-1);$('next').onclick=()=>go(scene+1);
 $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{$('position').textContent='Полный экран недоступен в этом окне';}};
