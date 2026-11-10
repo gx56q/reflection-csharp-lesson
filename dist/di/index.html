@@ -61,19 +61,18 @@ builder.Host.UseDefaultServiceProvider(options =&gt;
 var app = builder.Build();</code></pre>
   <div class="cards">
     <article><h3>ValidateOnBuild</h3><p>При <code>Build()</code> найдёт пропущенные зависимости в конструкторах зарегистрированных сервисов.</p></article>
-    <article><h3>ValidateScopes</h3><p>Проверяет, что <code>singleton</code> не зависит от <code>scoped</code>-сервиса и что <code>scoped</code>-сервис запрашивают только внутри области.</p></article>
+    <article><h3>ValidateScopes</h3><p>Проверяет, что <code>singleton</code> не зависит от <code>scoped</code>-сервиса и выдаёт ошибку, если <code>scoped</code>-сервис запросили без области.</p></article>
   </div>
 </section>
 <section id="scope">
-  <h2>Scoped-сервис в фоновой задаче</h2>
-  <div class="chain"><span>Одна задача</span><b>→</b><span>Своя область DI</span><b>→</b><span>Сервис внутри области</span></div>
-  <pre><code>// scopeFactory получаем в конструкторе фонового сервиса
-await using var scope = scopeFactory.CreateAsyncScope();
+  <h2>Ночной отчёт без HTTP-запроса</h2>
+  <p class="lead">В полночь приложение строит отчёт по расписанию. Ему нужен <code>ReportService</code>, зарегистрированный как <code>scoped</code>.</p>
+  <div class="chain"><span>Открываем область</span><b>→</b><span>Строим отчёт</span><b>→</b><span>Закрываем область</span></div>
+  <pre><code>await using var scope = scopeFactory.CreateAsyncScope();
 var reports = scope.ServiceProvider
     .GetRequiredService&lt;ReportService&gt;();
-
 await reports.GenerateAsync(stoppingToken);</code></pre>
-  <p>ASP.NET Core открывает область для HTTP-запроса. Фоновая задача открывает её сама.</p>
+  <p>Область живёт ровно столько, сколько строится один отчёт.</p>
 </section>
 <section id="validation">
   <h2>Когда нужна фабрика</h2>
@@ -107,10 +106,7 @@ await reports.GenerateAsync(stoppingToken);</code></pre>
       <p>Например, зарегистрировать обработчики из сборки по правилу или обернуть сервис декоратором для логирования.</p>
     </article>
     <article>
-      <h3>Ninject</h3>
-      <p><strong>Проект уже на Ninject.</strong></p>
-      <p>В Fractal Painter расширение Factory само реализует интерфейс фабрики. Это полезно знать при поддержке и переносе проекта.</p>
-    </article>
+      <h3>Simple Injector</h3><p><strong>Нужна подробная проверка настроек.</strong></p><p><code>Verify()</code> пробует создать сервисы и сообщает, например, что долгоживущий сервис удерживает зависимость с коротким временем жизни.</p></article>
   </div>
 </section>
 <section id="multiple">
