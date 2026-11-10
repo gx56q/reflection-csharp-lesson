@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=di-fit">
+<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=di-fit-cards">
 <script src="slides.js?v=fullscreen" defer></script>
 </head>
 <body>
@@ -104,7 +104,6 @@ await reports.GenerateAsync(stoppingToken);</code></pre>
     .ToFactory();</code></pre></article>
     <article><h3>Autofac</h3><p>Умеет сам создавать делегаты фабрик и даёт вложенные области. Отдельный пакет.</p><pre><code>builder
     .RegisterType&lt;Report&gt;();
-// Параметр конструктора:
 // Func&lt;string, Report&gt;</code></pre></article>
   </div>
 </section>
