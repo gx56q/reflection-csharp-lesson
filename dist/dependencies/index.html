@@ -10,44 +10,33 @@
 <main>
 <section id="cover">
   <h1>Управление зависимостями</h1>
-  <div class="chain"><span>Проект</span><b>→</b><span>Библиотека</span><b>→</b><span>Пакет NuGet</span></div>
+  <p class='lead'>Как API заказов подключает библиотеку скидок и обновляет её.</p>
 </section>
 <section id="projects">
-  <h2>Ссылка на другой проект</h2>
-  <div class="chain"><span>Tests</span><b>→</b><span>App</span><b>→</b><span>Core</span></div>
-<pre><code>dotnet add Tests/Tests.csproj reference App/App.csproj</code></pre>
-<p>Для <code>Tests</code> проект <code>App</code> прямой, а <code>Core</code> транзитивный.</p>
+  <h2>Ссылка на соседний проект</h2>
+  <div class="chain"><span>Orders.Api</span><b>→</b><span>Discounts</span><b>→</b><span>Money</span></div><pre><code>&lt;ProjectReference Include="../Discounts/Discounts.csproj" /&gt;</code></pre><div class="cards"><article><h3>Прямая</h3><p>API явно ссылается на Discounts.</p></article><article><h3>Транзитивная</h3><p>Money нужен Discounts и приходит в API через него.</p></article></div>
 </section>
 <section id="install">
-  <h2>Как выбрать и добавить пакет</h2>
-  <div class="chain"><span>Найти на nuget.org</span><b>→</b><span>Проверить версию и .NET</span><b>→</b><span>Добавить в проект</span></div>
-<pre><code>dotnet add package FakeItEasy --version 8.3.0</code></pre>
-<pre><code>&lt;PackageReference Include="FakeItEasy" Version="8.3.0" /&gt;</code></pre>
-<p>Пример из FileSender. Команду выполняют в папке нужного <code>.csproj</code>.</p>
+  <h2>Как подключить пакет</h2>
+  <div class="chain"><span>Имя и владелец</span><b>→</b><span>Поддерживаемый .NET</span><b>→</b><span>Версия</span></div><pre><code>dotnet add Orders.Api/Orders.Api.csproj package NodaTime --version 3.2.0</code></pre><pre><code>&lt;PackageReference Include="NodaTime" Version="3.2.0" /&gt;</code></pre><p>API использует NodaTime, чтобы учитывать часовой пояс при запуске акции.</p>
 </section>
 <section id="restore">
-  <h2>Куда скачиваются пакеты</h2>
-  <div class="chain"><span>Project.csproj</span><b>→</b><span>dotnet restore</span><b>→</b><span>Локальная папка пакетов</span></div>
-<pre><code>dotnet restore
-dotnet nuget locals global-packages --list
-dotnet list package --include-transitive</code></pre>
-<p>Прямые пакеты указаны в проекте. Транзитивные приходят через другие пакеты или проекты.</p>
+  <h2>Что делает restore</h2>
+  <div class="chain"><span>.csproj</span><b>→</b><span>Подбор версий</span><b>→</b><span>Локальный кеш</span></div><pre><code>dotnet restore
+dotnet list package --include-transitive
+dotnet nuget locals global-packages --list</code></pre><p>Если пакет уже есть в кеше, его можно взять оттуда. В <code>obj/project.assets.json</code> записано, что выбрал NuGet.</p>
 </section>
 <section id="pack">
-  <h2>От библиотеки до пакета</h2>
-  <div class="chain"><span>Core.csproj</span><b>→</b><span>dotnet pack</span><b>→</b><span>Core.1.2.0.nupkg</span></div>
-<pre><code>dotnet pack Core/Core.csproj -c Release -o ./packages -p:PackageVersion=1.2.0</code></pre>
-<div class="cards"><article><h3>Локальная папка</h3><p>Проверить пакет у себя.</p></article><article><h3>nuget.org</h3><p>Открытая публикация.</p></article><article><h3>Приватный источник</h3><p>Для команды или компании.</p></article></div>
+  <h2>Как выпустить свою библиотеку</h2>
+  <div class="chain"><span>Discounts.csproj</span><b>→</b><span>dotnet pack</span><b>→</b><span>Shop.Discounts.1.2.0.nupkg</span></div><pre><code>dotnet pack Discounts/Discounts.csproj -c Release -o ./packages</code></pre><div class="cards"><article><h3>Папка</h3><p>Проверить установку локально.</p></article><article><h3>nuget.org</h3><p>Открыть пакет всем.</p></article><article><h3>Приватный источник</h3><p>Выдать доступ своей команде.</p></article></div>
 </section>
 <section id="versions">
-  <h2>Что говорит версия пакета</h2>
-  <div class="cards"><article><h3>1.2.0 → 1.2.1</h3><p>PATCH. Исправили ошибку, старый код работает.</p></article><article><h3>1.2.0 → 1.3.0</h3><p>MINOR. Добавили метод, старый код работает.</p></article><article><h3>1.2.0 → 2.0.0</h3><p>MAJOR. Удалили публичный метод, клиентам надо менять код.</p></article></div>
+  <h2>Что изменилось в скидках</h2>
+  <div class="cards"><article><h3>1.2.0 → 1.2.1</h3><p><strong>PATCH</strong></p><p>Исправили округление до копеек.</p></article><article><h3>1.2.0 → 1.3.0</h3><p><strong>MINOR</strong></p><p>Добавили расчёт скидки по промокоду. Старый метод работает.</p></article><article><h3>1.2.0 → 2.0.0</h3><p><strong>MAJOR</strong></p><p>Удалили старый метод. Код API придётся поменять.</p></article></div>
 </section>
-<section id="exercise">
-  <h2>FileSender</h2>
-  <div class="chain"><span>Распознать</span><b>→</b><span>Проверить</span><b>→</b><span>Подписать</span><b>→</b><span>Отправить</span></div>
-<p class="lead">Допишите тесты <code>SendFiles</code> в заготовке.</p>
-<p><a href="FileSender.zip" download>Скачать заготовку</a> · <a href="https://ulearn.me/course/cs2/Aktivnost_FileSender__1b0d1cd3-dec2-4d91-aadb-1a17c623c9bd">Условие в ulearn</a></p>
+<section id="choice">
+  <h2>Ссылка на проект или пакет?</h2>
+  <div class="cards"><article><h3>ProjectReference</h3><div class="chain"><span>API</span><b>→</b><span>Исходники</span></div><p>Меняешь API и скидки вместе. Следующая сборка возьмёт изменения.</p></article><article><h3>PackageReference</h3><div class="chain"><span>API</span><b>→</b><span>Скидки 1.2.0</span></div><p>Библиотека выпускается отдельно. API обновляет её в своём темпе.</p></article></div>
 </section>
 </main>
 <nav aria-label="Слайды"><button id="prev" type="button">← Назад</button><span id="counter" aria-live="polite"></span><button id="next" type="button">Дальше →</button><button id="fullscreen" type="button" hidden>На весь экран</button></nav>
