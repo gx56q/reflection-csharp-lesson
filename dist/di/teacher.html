@@ -15,7 +15,6 @@
     <nav class="contents" aria-label="Оглавление">
       <strong>На этой странице</strong>
       <a href="#plan">План на час</a>
-      <a href="#packages">Выбор пакета</a>
       <a href="#instances">Два singleton</a>
       <a href="#troubleshooting">Если не работает</a>
       <a href="#exercise-guide">Задание и приёмка</a>
@@ -27,45 +26,32 @@
       <p class="eyebrow">План занятия</p>
       <h1>DI-контейнеры</h1>
       <div class="split" aria-label="Распределение времени"><div><strong>25</strong><span>обсуждение</span></div><div><strong>30</strong><span>самостоятельно</span></div><div><strong>5</strong><span>приёмка</span></div></div>
-      <p>На этой паре группа выбирает время жизни зависимостей, сравнивает контейнеры и самостоятельно переносит Fractal Painter на Microsoft DI.</p>
-      <p><strong>Перед парой.</strong> Открой <a href="./#cover">первый слайд</a>. Держи свою копию проекта и пошаговый перенос в отдельном окне. Попроси ребят открыть копию Fractal Painter из домашки. <a href="https://ulearn.me/course/cs2/Zametki_prepodavatelyu_d5cd6488-8285-4a3d-99e9-437e98074e57">Заметки преподавателю</a></p>
+      <p><strong>Перед парой.</strong> Открой <a href="./#cover">первый слайд</a> и держи копию Fractal Painter под рукой. <a href="https://ulearn.me/course/cs2/Zametki_prepodavatelyu_d5cd6488-8285-4a3d-99e9-437e98074e57">Заметки преподавателю</a></p>
     </section>
     <section id="plan">
       <h2>План на 60 минут</h2>
-      <p>Основа рассказа: статья Контура о проверке регистраций в DI-контейнере. Из заметок курса взяты времена жизни, выбор пакета, замеры и самостоятельный перенос Fractal Painter. <a href="https://habr.com/ru/companies/skbkontur/articles/925146/">Статья на Хабре</a></p>
       <p><a href="./#cover">1. Обложка</a>. «Сегодня разберём, когда DI-контейнер создаёт новый объект и какие ошибки бывают в настройках».</p>
       <article class="slot"><h3><span class="time">00:00 до 00:03</span><a href="./#lifetimes">2. Три времени жизни</a></h3>
-      <p>«Когда регистрируешь сервис, выбираешь, как часто контейнер будет создавать объект. В Microsoft DI есть три времени жизни. Покажу каждое на одной строке кода».</p>
-      <p>«Singleton. Алиса и Борис получают один и тот же кэш. Scoped. В ASP.NET Core для каждого HTTP-запроса есть своя область: у Алисы один объект контекста на весь запрос, у Бориса другой. Transient. Каждый раз, когда контейнеру нужен форматтер, он создаёт новый».</p>
-      <p>После примера с контекстом запроса переходи к двум сбоям. «Теперь представь, что общий сервис запомнил контекст конкретного запроса. Дальше посмотрим, что случится, когда придёт другой пользователь».</p>
-      <p>Если спросят про консольное приложение: области там создаёшь сам через <code>CreateScope()</code>. Singleton создаётся на регистрацию внутри одного провайдера. <a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/service-lifetimes">Microsoft Learn · Времена жизни</a></p></article>
+      <p>«Смотри на три строки регистрации. Singleton даёт всем один кэш. Scoped даёт один контекст на HTTP-запрос. Transient создаёт новый форматтер каждый раз, когда его запрашивают у контейнера. Теперь посмотрим, что случится, если общий объект запомнит данные одного запроса».</p></article>
       <article class="slot"><h3><span class="time">00:03 до 00:05</span><a href="./#start">3. Два сбоя в сервисе отчётов</a></h3>
-      <p>«Слева посмотри на конструктор: ReportService просит IReportStore. Зарегистрирован только сам сервис. Когда контейнер пытается его создать, он останавливается на IReportStore. Справа все зависимости можно собрать, но код запоминает User в момент создания singleton. Если это запрос Алисы, при запросе Бориса свойство всё ещё содержит Алису».</p>
-      <p>Это учебные фрагменты по мотивам статьи Контура. В правом фрагменте <code>http</code> передан в первичный конструктор <code>DBProvider(IHttpContextAccessor http)</code>. Сам accessor общий, но его <code>HttpContext</code> относится к текущему запросу. Ошибка в сохранении значения <code>User</code> при создании объекта. <a href="https://habr.com/ru/companies/skbkontur/articles/925146/">Контур на Хабре</a></p></article>
+      <p>«Слева контейнер не может создать отчёт: в конструкторе нужен <code>IReportStore</code>, а его забыли зарегистрировать. Справа всё зарегистрировано, но общий <code>DBProvider</code> при первом создании запомнил пользователя. Если его создали в запросе Алисы, в запросе Бориса он всё ещё хранит Алису».</p></article>
       <article class="slot"><h3><span class="time">00:05 до 00:11</span><a href="./#validation">4. Когда нужна фабрика</a></h3>
-      <p>«По умолчанию регистрирую класс по типу. Когда зависимость нужна сервису для работы, указываю её в конструкторе. Справа другой случай: чтобы создать кэш, надо сначала прочитать размер из ISettings. Здесь удобно дать контейнеру короткую функцию сборки».</p>
-      <p>«ValidateOnBuild не вызывает эту функцию. Если забыли ISettings, ошибка появится в GetRequiredService, когда контейнер впервые запустит фабрику. Поэтому в тесте собираю настоящий набор регистраций и получаю из него ReportCache. Если тестируем scoped-сервис, сначала открываем область».</p>
-      <pre><code>using var provider = services.BuildServiceProvider();
-_ = provider.GetRequiredService&lt;ReportCache&gt;();</code></pre>
-      <p>Это отдельная проверка в тесте. В коде ASP.NET Core при настройке сервисов второй провайдер не строим. Пример кэша адаптирован с Autofac на Microsoft DI. <a href="https://habr.com/ru/companies/skbkontur/articles/925146/">Контур на Хабре · Фабрики</a></p></article>
+      <p>«Если контейнер может передать всё через конструктор, достаточно зарегистрировать тип. Для кэша нужен размер: фабрика берёт его из <code>ISettings</code> и сама вызывает конструктор. Как проверить, что мы ничего не забыли?»</p>
+      <details><summary>Как проверить фабрику в тесте</summary><p>Собери провайдер с регистрациями приложения и запроси <code>ReportCache</code>. Этот вызов запустит фабрику.</p><pre><code>using var provider = services.BuildServiceProvider();
+_ = provider.GetRequiredService&lt;ReportCache&gt;();</code></pre><p>В ASP.NET Core используй отдельный провайдер в тесте. Хост приложения строит свой сам.</p></details></article>
       <article class="slot"><h3><span class="time">00:11 до 00:15</span><a href="./#missing">5. Проверка DI при запуске</a></h3>
-      <p>«В ASP.NET Core эти две настройки ставлю перед builder.Build(). Первая проверяет цепочку зависимостей: если зарегистрированный ReportService требует IReportStore, а регистрации нет, упадёт Build(), ещё до HTTP-запросов. Вторая проверяет, что singleton не зависит от scoped-сервиса. Ещё она не даст запросить scoped-сервис без области, например до начала HTTP-запроса, если ты сам не открыл область».</p>
-      <p>«В Development стандартный хост обычно уже включает эти проверки. Я выставляю их явно, чтобы пример одинаково работал в других окружениях». Если запросить scoped-сервис из корневого провайдера, <code>ValidateScopes = true</code> даст <code>InvalidOperationException</code>. Без проверки корневой провайдер сохранит этот объект до своего закрытия. Следующие обращения через корневой провайдер получат тот же экземпляр. Эти настройки проверяют цепочку зависимостей без выполнения конструкторов и лямбд. Даже с обеими настройками пример с сохранением <code>HttpContext.User</code> пройдёт: <code>IHttpContextAccessor</code> можно внедрить в singleton, а обращение к его свойству происходит внутри кода. <a href="https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis#validatescopes-and-validateonbuild">Microsoft Learn</a></p></article>
+      <p>«Включаем две проверки перед <code>Build()</code>. <code>ValidateOnBuild</code> поймает пропущенный <code>IReportStore</code>. <code>ValidateScopes</code> не даст передать scoped-сервис в singleton или взять его из корневого контейнера. Тело фабрики эти проверки не запускают».</p>
+      <details><summary>Что произойдёт без области</summary><p>С <code>ValidateScopes</code> получишь <code>InvalidOperationException</code>. Без проверки корневой контейнер вернёт тот же объект при следующем запросе и освободит его только при своём закрытии.</p></details>
+      <details><summary>Почему проверки пропустят пример с Алисой</summary><p><code>IHttpContextAccessor</code> можно внедрить в singleton. Ошибка внутри кода: <code>DBProvider</code> сохраняет значение <code>HttpContext.User</code> при создании объекта.</p></details></article>
       <article class="slot"><h3><span class="time">00:15 до 00:19</span><a href="./#scope">6. Ночной отчёт без HTTP-запроса</a></h3>
-      <p>«В веб-приложении область обычно создаётся на время HTTP-запроса. А теперь представь, что приложение строит отчёт в полночь само, по расписанию. HTTP-запроса нет. ReportService читает данные через DbContext, который EF Core по умолчанию регистрирует как scoped. Фоновый сервис получает IServiceScopeFactory в конструкторе и открывает отдельную область на каждую задачу».</p>
-      <p>«После CreateAsyncScope беру ReportService из этой области. Мы зарегистрировали ReportService как scoped, чтобы получать один экземпляр на задачу. Transient здесь тоже допустим: если создать ReportService внутри области, он получит DbContext этой области. Дожидаюсь окончания GenerateAsync. При выходе из блока await using освободит область и её зависимости. Для следующего отчёта открываю новую».</p>
-      <p><code>scopeFactory</code> берём из конструктора фонового сервиса, его тип <code>IServiceScopeFactory</code>. Этот код выполняется на каждый запуск отчёта. Если отчёт требует данных пользователя, фоновая задача получает их из параметров задания, поскольку HTTP-запроса нет. <a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/scoped-service">Microsoft Learn · Scoped-сервисы в BackgroundService</a></p></article>
+      <p>«Ночью отчёт запускается по расписанию. HTTP-запроса нет, поэтому задаче нужна своя область. Открываем её, получаем <code>ReportService</code> и ждём, пока он прочитает данные. В конце <code>await using</code> закрывает область и освобождает её <code>DbContext</code>».</p>
+      <details><summary>Зачем здесь scoped и откуда scopeFactory</summary><p><code>IServiceScopeFactory</code> приходит в конструктор фонового сервиса. У EF Core <code>AddDbContext</code> по умолчанию регистрирует контекст как scoped. Сам <code>ReportService</code> можно сделать transient. Если получить его внутри области, он возьмёт <code>DbContext</code> этой области.</p></details></article>
       <article class="slot"><h3><span class="time">00:19 до 00:23</span><a href="./#choice">7. Как выбрать DI-контейнер</a></h3>
-      <p>«Слева обычная задача: сервис заказов принимает IPayment, а встроенный контейнер подставляет CardPayment. Для такой регистрации менять контейнер смысла нет».</p>
-      <p>«Autofac имеет смысл, когда нужна конкретная возможность. Смотри на среднюю схему: заказ по-прежнему вызывает IPayment. Autofac подставляет LoggedPayment, тот пишет в лог и вызывает CardPayment. Перед регистрацией декоратора сам CardPayment тоже регистрируем как IPayment. Или у нас много однотипных обработчиков: можно собрать регистрации по правилу из целой сборки».</p>
-      <p>«Simple Injector интересен, когда хочется проверить конфигурацию строже. Verify() пробует создать зарегистрированные сервисы и сообщает о подозрительных связях. Например, singleton хранит transient, который рассчитывали создавать заново. Учитывай, что Verify() вызывает конструкторы, поэтому это отличается от ValidateOnBuild».</p>
-      <p><a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection-guidelines#default-service-container-replacement">Microsoft Learn · Когда менять контейнер</a> · <a href="https://autofac.readthedocs.io/en/latest/advanced/adapters-decorators.html">Autofac · Декораторы</a> · <a href="https://autofac.readthedocs.io/en/latest/register/scanning.html">Autofac · Регистрация из сборок</a> · <a href="https://docs.simpleinjector.org/en/latest/diagnostics.html">Simple Injector · Диагностика</a></p></article>
+      <p>«Слева обычная регистрация: заказы просят <code>IPayment</code>, Microsoft DI подставляет <code>CardPayment</code>. В середине Autofac подключает обёртку: она пишет в лог и передаёт вызов оплате. Справа Simple Injector при <code>Verify()</code> пробует создать сервисы и ищет ошибки во временах жизни. Для обычных регистраций в ASP.NET Core начни со встроенного контейнера».</p></article>
       <article class="slot"><h3><span class="time">00:23 до 00:25</span><a href="./#multiple">8. Две регистрации одного интерфейса</a></h3>
-      <p>«Зарегистрировали EmailNotifier, потом SmsNotifier. Если конструктор просит один INotifier, он получит SMS: эта регистрация последняя. Если конструктор просит IEnumerable&lt;INotifier&gt;, придут оба: сначала почта, потом SMS. Так можно собрать все каналы уведомлений и пройти по ним в цикле. Если поменять строки местами, одиночный запрос вернёт почту, а список начнётся с SMS».</p>
-      <p>На слайде контейнер запрашиваем напрямую, чтобы показать правило. В приложении коллекцию обычно принимает конструктор. <a href="https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0#service-registration-methods">Microsoft Learn · Несколько регистраций</a></p></article>
+      <p>«Зарегистрировали почту, потом SMS. Если попросить один <code>INotifier</code>, получим SMS. Если попросить <code>IEnumerable&lt;INotifier&gt;</code>, получим оба в порядке регистрации. Так сервис может разослать уведомление по всем каналам».</p></article>
       <article class="slot"><h3><span class="time">00:25 до 00:55</span><a href="./#exercise">9. Самостоятельный перенос</a></h3>
-      <p>«Теперь работайте в своей копии Fractal Painter. Переведите проект на Microsoft DI. В конце покажите, что окно открывается, оба фрактала рисуются и настройки применяются».</p>
-      <p>Оставь на экране задание. Подсказки ниже открывай у себя при личном разборе.</p></article>
+      <p>«Перенесите Fractal Painter на Microsoft DI в отдельной копии проекта. Покажите, что окно открывается, оба фрактала рисуются и настройки применяются».</p></article>
       <article class="slot"><h3><span class="time">00:55 до 01:00</span><span>Приёмка</span></h3>
       <p>Попроси одного или двух студентов показать окно и обе команды рисования. Если перенос ещё не закончен, пусть покажут последний рабочий шаг и ошибку, на которой остановились.</p></article>
     </section>
@@ -79,30 +65,17 @@ services.AddSingleton&lt;IImageController, ImageController&gt;();</code></pre>
 services.AddSingleton&lt;IImageController&gt;(sp =&gt; sp.GetRequiredService&lt;ImageController&gt;());</code></pre>
       <p>Попроси показать два пути получения объекта: по конкретному типу и по интерфейсу. Сравни ссылки. В рабочей копии оба пути ведут к контроллеру, к которому окно подключило <code>Image</code>.</p>
     </section>
-    <section id="packages">
-      <h2>Разница между пакетами</h2>
-      <ul>
-        <li><strong>Microsoft.Extensions.DependencyInjection.Abstractions</strong> содержит контракты вроде <code>IServiceCollection</code> и <code>IServiceScopeFactory</code>. <strong>Microsoft.Extensions.DependencyInjection</strong> содержит реализацию провайдера. Для типичного ASP.NET Core контейнер уже включён в хост. В Avalonia его можно добавить как библиотеку. В консольном демо провайдер приходит из установленного <code>Microsoft.AspNetCore.App</code>.</li>
-        <li><strong>Microsoft DI</strong> удобно оставить, когда нужны конструкторы, времена жизни, <code>IEnumerable&lt;T&gt;</code> и ключи (.NET 8+). Для <code>Lazy&lt;T&gt;</code> или фабрики задай явную регистрацию либо обычный класс. В явной фабрике видно, откуда берутся параметры и кто создаёт объект. За это платим несколькими строками кода.</li>
-        <li><strong>Ninject + Ninject.Extensions.Factory</strong> удобен в домашке, где интерфейс <code>IDragonPainterFactory</code> получает реализацию через <code>ToFactory()</code>. Контейнер подставляет зарегистрированные зависимости, а вызов фабрики передаёт настройки. Понадобится расширение. При отладке нужно знать, как оно связывает параметры.</li>
-        <li><strong>Autofac</strong> полезен, когда регулярно нужны автоматические <code>Lazy&lt;T&gt;</code>, фабрики с параметрами или <code>Owned&lt;T&gt;</code> для контролируемого времени владения. Поддерживает вложенные области. За эти возможности платим дополнительной интеграцией и более сложными правилами владения объектами. Одна ручная фабрика редко окупает миграцию.</li>
-      </ul>
-      <p><a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview">Microsoft DI</a> · <a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines">Рекомендации Microsoft</a> · <a href="https://github.com/ninject/Ninject.Extensions.Factory">Ninject Factory</a> · <a href="https://docs.autofac.org/en/latest/resolve/relationships.html">Autofac Relationship Types</a></p>
-      <p>Для подготовки к вопросу про фабрики сравни два вызова <code>Value</code> у одного <code>Lazy&lt;T&gt;</code> и два вызова делегата, который запрашивает transient из контейнера. Первый вариант возвращает сохранённый объект. Второй запрашивает новый при каждом вызове. <a href="https://habr.com/ru/articles/981308/">Хабр · Lazy&lt;T&gt; в DI</a></p><p><strong>Про скорость.</strong> Измеряй отдельно сборку контейнера, первое получение объекта и повторные обращения. Для сравнения нужны одинаковый граф, времена жизни, версия .NET и одинаковые условия прогрева. Замер пустого <code>GetService</code> не говорит, насколько быстрее рисуется фрактал. В этой паре сравниваем поведение.</p>
-    </section>
     <section id="troubleshooting">
       <h2>Если не работает</h2>
       <details><summary>Окно не открывается</summary><p>Посмотри первое исключение из <code>GetRequiredService&lt;MainWindow&gt;()</code>. Пусть студент прочитает цепочку от окна до типа, который контейнер не смог создать. Если запрос снова приходит к <code>MainWindow</code>, проверь, не вызывается ли делегат окна прямо в конструкторе действия.</p></details>
       <details><summary>Окно есть, меню пустое</summary><p>Проверь, что все команды зарегистрированы как <code>IUiAction</code> и окно получает коллекцию. В Microsoft DI запрос одного <code>IUiAction</code> возвращает последнюю обычную регистрацию. Запрос <code>IEnumerable&lt;IUiAction&gt;</code> возвращает все обычные регистрации. <a href="https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection">Microsoft Learn</a></p></details>
       <details><summary>Окно есть, рисунка нет</summary><p>Спроси, какой контроллер получил элемент <code>Image</code> и какой получил painter. Если экземпляры совпадают, проверь вызов команды и момент, когда читается размер элемента.</p></details>
       <details><summary>Кох рисуется, дракон падает после OK</summary><p>Открой вызов фабрики после диалога. Проверь, что она получает настройки текущего запуска. Валидация при сборке провайдера не запускает пользовательский код лямбд. Этот путь нужно проверить вызовом команды. <a href="https://habr.com/ru/companies/skbkontur/articles/925146/">Контур на Хабре · Валидация регистраций</a></p></details>
-      <details><summary>До конца пары осталось пять минут, перенос не закончен</summary><p>Пусть студент покажет последнюю работающую часть и первое место сбоя. Запиши, какой следующий шаг он проверит: регистрацию, открытие окна, меню или конкретную команду.</p></details>
     </section>
     <section id="exercise-guide">
-      <h2>Что дать группе и как принять</h2>
-      <p><strong>Скажи группе.</strong> «Перенесите Fractal Painter на Microsoft DI в отдельной копии проекта. Покажите, что оба фрактала рисуются и настройки работают».</p>
-      <p>Дай ребятам сделать перенос самостоятельно. Раздел про два контроллера и пошаговый разбор держи под рукой для подготовки и индивидуальных вопросов.</p>
-      <details><summary>Что проверить при приёмке</summary>
+      <h2>Что проверить при приёмке</h2>
+      <p>Пока ребята работают, открывай подсказки по конкретному сбою.</p>
+      <details><summary>Чек-лист</summary>
         <ul><li>Окно открывается, все команды есть в меню.</li><li>Кривая Коха рисуется. Дракон рисуется после OK в диалоге.</li><li>Окно и рисовальщики используют один контроллер. Настройки палитры и размера доходят до отрисовки.</li><li>Студент может показать, где объявлены регистрации и откуда фабрика получает настройки.</li></ul>
       </details>
     </section>
@@ -111,18 +84,15 @@ services.AddSingleton&lt;IImageController&gt;(sp =&gt; sp.GetRequiredService&lt;
       <details><summary>Почему окно и рисовальщик могут получить разные singleton?</summary><p>Они запрашивают два разных типа, для которых сделаны отдельные регистрации. Покажи, как одна регистрация возвращает экземпляр другой.</p></details>
       <details><summary>Что происходит, если вызвать Lazy.Value в конструкторе?</summary><p>Создание происходит прямо во время сборки объекта. Если зависимость ведёт обратно к собираемому объекту, цикл сохраняется. Отложенный вызов уместен, когда значение действительно нужно позже.</p></details>
       <details><summary>Зачем фабрике DragonSettings?</summary><p>Настройки появляются после диалога. Контроллер и палитра известны при сборке фабрики, настройки конкретного рисования приходят в её метод.</p></details>
-      <details><summary>Что будет, если singleton держит scoped-сервис?</summary><p>Сервис переживёт предполагаемую область. Например, фоновая задача может удерживать один контекст базы на все операции. Создай область на одну операцию через <code>IServiceScopeFactory</code> и получай сервисы из этой области. Включи <code>ValidateScopes</code> и <code>ValidateOnBuild</code>. Тело лямбды регистрации при проверке графа не исполняется.</p></details>
       <details><summary>Кто вызывает Dispose?</summary><p>Провайдер освобождает созданные им сервисы при закрытии соответствующей области или корневого провайдера. Экземпляр, переданный в регистрацию готовым объектом, освобождает его владелец. <code>Scoped</code> означает «один на область». В desktop-приложении области создаёт сам код.</p></details>
     </section>
     <section id="sources">
       <h2>Источники и материалы</h2>
       <ul>
-        <li><a href="https://habr.com/ru/articles/559888/">Хабр · Время жизни сервисов</a></li>
         <li><a href="https://habr.com/ru/companies/skbkontur/articles/925146/">Контур на Хабре · Захваченные зависимости</a></li>
         <li><a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview">Microsoft</a></li>
-        <li><a href="https://github.com/ninject/Ninject.Extensions.Factory">Ninject</a></li>
-        <li><a href="https://docs.autofac.org/en/latest/resolve/relationships.html">Autofac</a></li>
-        <li><a href="https://habr.com/ru/articles/1062576/">Хабр · Pure.DI vs Autofac</a></li>
+        <li><a href="https://docs.simpleinjector.org/en/latest/diagnostics.html">Simple Injector · Диагностика</a></li>
+        <li><a href="https://autofac.readthedocs.io/en/latest/advanced/adapters-decorators.html">Autofac · Декораторы</a></li>
         <li><a href="https://ulearn.me/course/cs2/Praktika_Fractal_Painter_DI_container__ea0283d6-e0a4-4a88-a427-df4f6dfec831">Исходное задание</a></li>
         <li><a href="https://docs.avaloniaui.net/docs/app-development/dependency-injection">Avalonia · DI</a></li>
       </ul>
