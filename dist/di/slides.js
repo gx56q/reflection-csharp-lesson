@@ -17,6 +17,21 @@ function move(offset) {
 }
 previous.onclick = () => move(-1);
 next.onclick = () => move(1);
+const fullscreen = document.querySelector('#fullscreen');
+if (document.fullscreenEnabled) {
+    fullscreen.hidden = false;
+    fullscreen.onclick = async () => {
+        try {
+            if (document.fullscreenElement) await document.exitFullscreen();
+            else await document.documentElement.requestFullscreen();
+        } catch (error) {
+            console.warn('Не удалось переключить полноэкранный режим', error);
+        }
+    };
+    document.addEventListener('fullscreenchange', () => {
+        fullscreen.textContent = document.fullscreenElement ? 'Выйти из полного экрана' : 'На весь экран';
+    });
+}
 window.addEventListener('hashchange', render);
 document.addEventListener('keydown', event => {
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
