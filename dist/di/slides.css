@@ -18,7 +18,7 @@ button:disabled { opacity: .45; cursor: default; }
 :focus-visible { outline: 3px solid #075f60; outline-offset: 4px; }
 .source { font-size: .9rem; }
 
-pre { margin: .8rem 0; padding: .8rem 1rem; overflow: auto; background: #102832; color: #eff7f7; border-radius: .5rem; font-size: clamp(.9rem, 2vw, 1.4rem); line-height: 1.45; }
+pre { margin: .8rem 0; padding: .8rem 1rem; white-space: pre-wrap; overflow-wrap: anywhere; background: #102832; color: #eff7f7; border-radius: .5rem; font-size: clamp(.9rem, 2vw, 1.4rem); line-height: 1.45; }
 article pre { font-size: clamp(.8rem, 1.65vw, 1.25rem); }
 .ok { color: #136048; }
 .fail { color: #a82724; }
@@ -42,10 +42,9 @@ article pre { font-size: clamp(.8rem, 1.65vw, 1.25rem); }
 .cover-map, .request-map, .fractal-preview { display: grid; align-items: center; gap: .55rem; }
 .cover-map { grid-template-columns: max-content auto max-content; width: fit-content; font-size: clamp(1.15rem, 3vw, 2.2rem); color: #075f60; }
 .cover-map span, .request-map span { background: white; border: 1px solid #bfd1d4; padding: .55rem .8rem; border-radius: .5rem; }
-.cards pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .lifetime-row { display: grid; gap: .55rem; margin-bottom: .65rem; }
-.lifetime-row pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.lifetime-row pre { margin: 0; }
 @media (min-width: 760px) {
   .lifetime-row { grid-template-columns: 1fr 1.15fr; align-items: center; gap: 1rem; }
 }
