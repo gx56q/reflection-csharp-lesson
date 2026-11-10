@@ -41,3 +41,10 @@ article pre { font-size: clamp(.8rem, 1.65vw, 1.25rem); }
   .request-map .stored { grid-column: 3; grid-row: 3; }
   .request-map .shared + b { display: none; }
 }
+
+.lifetime-example { overflow-x: auto; }
+.lifetime-example table { width: 100%; border-collapse: collapse; font-size: clamp(.9rem, 2vw, 1.4rem); background: white; }
+.lifetime-example caption { text-align: left; padding: .3rem 0 .6rem; }
+.lifetime-example th, .lifetime-example td { text-align: left; padding: .55rem .75rem; border: 1px solid #bfd1d4; }
+.lifetime-example thead { background: #dfeceb; }
+.lifetime-example td code { white-space: nowrap; }

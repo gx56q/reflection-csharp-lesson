@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=projector">
+<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=lifetimes">
 <script src="slides.js?v=examples" defer></script>
 </head>
 <body>
@@ -11,6 +11,24 @@
 <section id="cover">
   <p class="tag">Проектирование на C#</p>
   <h1>DI-контейнеры</h1><div class="cover-map" aria-hidden="true"><span>Сервис</span><b>→</b><span>Зависимость</span></div>
+</section>
+<section id="lifetimes">
+  <p class="tag">Microsoft DI</p>
+  <h2>Singleton, Scoped, Transient</h2>
+  <pre><code>services.AddSingleton&lt;ReportCache&gt;();
+services.AddScoped&lt;RequestContext&gt;();
+services.AddTransient&lt;ReportFormatter&gt;();</code></pre>
+  <div class="lifetime-example">
+    <table>
+      <caption>Каждый сервис получаем из DI дважды за HTTP-запрос</caption>
+      <thead><tr><th scope="col">Регистрация</th><th scope="col">Запрос Алисы</th><th scope="col">Запрос Бориса</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Singleton</th><td><code>#1 → #1</code></td><td><code>#1 → #1</code></td></tr>
+        <tr><th scope="row">Scoped</th><td><code>#2 → #2</code></td><td><code>#3 → #3</code></td></tr>
+        <tr><th scope="row">Transient</th><td><code>#4 → #5</code></td><td><code>#6 → #7</code></td></tr>
+      </tbody>
+    </table>
+  </div>
 </section>
 <section id="start">
   <p class="tag">Примеры из статьи Контура</p>
