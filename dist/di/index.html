@@ -72,6 +72,19 @@
   <pre><code>// Autofac: name передаёт вызывающий код, логгер берётся из DI
 public delegate Report ReportFactory(string name);</code></pre>
 </section>
+<section id="multiple">
+  <p class="tag">Microsoft DI</p>
+  <h2>Две регистрации одного интерфейса</h2>
+  <pre><code>services.AddSingleton&lt;INotifier, EmailNotifier&gt;();
+services.AddSingleton&lt;INotifier, SmsNotifier&gt;();
+using var provider = services.BuildServiceProvider();</code></pre>
+  <div class="cards">
+    <article><h3>Один сервис</h3><pre><code>provider.GetRequiredService
+    &lt;INotifier&gt;()</code></pre><p><strong>SmsNotifier</strong> · последняя регистрация</p></article>
+    <article><h3>Все сервисы</h3><pre><code>provider.GetRequiredService
+    &lt;IEnumerable&lt;INotifier&gt;&gt;()</code></pre><p><strong>EmailNotifier → SmsNotifier</strong> · в порядке регистрации</p></article>
+  </div>
+</section>
 <section id="exercise">
   <p class="tag">Самостоятельная практика</p>
   <h2>Fractal Painter на Microsoft DI</h2>
