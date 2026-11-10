@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=fullscreen">
+<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=di-checks">
 <script src="slides.js?v=fullscreen" defer></script>
 </head>
 <body>
@@ -24,21 +24,28 @@
   <pre><code>services.AddTransient&lt;ReportFormatter&gt;();</code></pre>
 </section>
 <section id="start">
-  <h2>Как настройки DI ломают отчёты</h2>
+  <h2>Два сбоя в сервисе отчётов</h2>
   <div class="cards">
-    <article><h3>Отчёт не открывается</h3>
-      <ol class="failure-steps">
-        <li><code>GET /reports</code> запрашивает <code>ReportService</code>.</li>
-        <li>Контейнеру нужен <code>IReportStore</code> для конструктора.</li>
-        <li class="fail"><strong>Хранилище не зарегистрировали.</strong> Сервис не создаётся, запрос получает 500.</li>
-      </ol>
+    <article><h3>Не хватает регистрации</h3>
+      <pre><code>services.AddScoped&lt;ReportService&gt;();
+
+// Конструктор ReportService
+public ReportService(IReportStore store)
+{
+    this.store = store;
+}</code></pre>
+      <p class="fail"><code>IReportStore</code> не зарегистрирован. Контейнер не может создать <code>ReportService</code>.</p>
     </article>
-    <article><h3>Отчёт строится для другого пользователя</h3>
-      <ol class="failure-steps">
-        <li>Алиса открывает отчёт. <code>DBProvider</code> получает её контекст.</li>
-        <li>Борис открывает отчёт. Контейнер отдаёт тот же <code>DBProvider</code>: это singleton.</li>
-        <li class="fail"><strong>Провайдер всё ещё хранит контекст Алисы.</strong> Запрос к БД идёт от её имени.</li>
-      </ol>
+    <article><h3>Общий объект запомнил пользователя</h3>
+      <pre><code>services.AddHttpContextAccessor();
+services.AddSingleton&lt;DBProvider&gt;();
+
+class DBProvider(IHttpContextAccessor http)
+{
+    public ClaimsPrincipal User { get; }
+        = http.HttpContext!.User;
+}</code></pre>
+      <p class="fail">Если объект создали в запросе Алисы, он сохранит её <code>User</code> и для запроса Бориса.</p>
     </article>
   </div>
 </section>
@@ -51,10 +58,18 @@
   </div>
 </section>
 <section id="missing">
-  <h2>Редкий маршрут падает при первом вызове</h2>
-  <div class="chain diagram"><span>GET /reports</span><b>→</b><span><code>B(A a)</code></span><b>→</b><span class="broken"><code>A</code> не зарегистрирован</span></div>
-  <pre><code>builder.RegisterType&lt;B&gt;();
-<span class="code-error">container.Resolve&lt;B&gt;(); // B(A a), но A не зарегистрирован</span></code></pre>
+  <h2>Проверка DI при запуске</h2>
+  <pre><code>var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseDefaultServiceProvider(options =&gt;
+{
+    options.ValidateOnBuild = true;
+    options.ValidateScopes = true;
+});
+var app = builder.Build();</code></pre>
+  <div class="cards">
+    <article><h3>ValidateOnBuild</h3><p>При <code>Build()</code> найдёт пропущенные зависимости в конструкторах зарегистрированных сервисов.</p></article>
+    <article><h3>ValidateScopes</h3><p>Ловит <code>Scoped</code> внутри <code>Singleton</code> и получение <code>Scoped</code> из корневого контейнера.</p></article>
+  </div>
 </section>
 <section id="scope">
   <h2>Контекст первого пользователя остаётся в singleton</h2>
@@ -68,26 +83,33 @@
 }</code></pre>
 </section>
 <section id="validation">
-  <h2>Зависимости фабрики спрятаны внутри функции</h2>
+  <h2>Когда нужна фабрика</h2>
   <div class="cards">
-    <article><h3>В конструкторе</h3><p>Параметры видны до создания объекта.</p></article>
-    <article><h3>В функции</h3><p>Кэш запрашивает настройки внутри фабрики. Встроенная проверка Microsoft DI её не запускает.</p></article>
-  </div>
-  <pre><code>builder.Register(ctx =&gt; {
-    <span class="code-error">var settings = ctx.Resolve&lt;ISettings&gt;();</span>
-    return new MemoryCache(
-        new MemoryCacheOptions { SizeLimit = settings.CacheSize });
+    <article><h3>Обычно хватает конструктора</h3>
+      <pre><code>services.AddScoped&lt;ReportService&gt;();</code></pre>
+      <p>Контейнер сам передаст зарегистрированные зависимости. Их видно в конструкторе.</p>
+    </article>
+    <article><h3>Фабрика нужна для особой сборки</h3>
+      <pre><code>services.AddSingleton(sp =&gt; {
+    var s = sp.GetRequiredService&lt;ISettings&gt;();
+    return new ReportCache(s.CacheSize);
 });</code></pre>
+      <p>Функция сама берёт настройки и передаёт размер кэша в конструктор.</p>
+    </article>
+  </div>
+  <p><code>ValidateOnBuild</code> не запускает лямбду. В тесте запроси <code>ReportCache</code> из контейнера.</p>
 </section>
 <section id="choice">
-  <h2>У контейнеров разные возможности</h2>
+  <h2>Как выбрать контейнер</h2>
+  <p class="lead">Имя отчёта узнаём при вызове. Логгер берём из DI.</p>
   <div class="cards">
-    <article><h3>Microsoft DI</h3><p>Регистрация по типу, по функции или готовым объектом. Три времени жизни.</p></article>
-    <article><h3>Ninject + Factory</h3><p>Генерирует реализацию интерфейса фабрики.</p></article>
-    <article><h3>Autofac</h3><p>Даёт фабрики с параметрами и вложенные области.</p></article>
+    <article><h3>Microsoft DI</h3><p>Уже есть в ASP.NET Core. Для этой задачи пишем маленькую фабрику сами.</p><pre><code>services.AddTransient&lt;
+    IReportFactory, ReportFactory&gt;();</code></pre></article>
+    <article><h3>Ninject + Factory</h3><p>Так устроен исходный Fractal Painter. Расширение реализует интерфейс фабрики за нас.</p><pre><code>kernel.Bind&lt;IReportFactory&gt;()
+    .ToFactory();</code></pre></article>
+    <article><h3>Autofac</h3><p>Умеет сам создавать делегаты фабрик и даёт вложенные области. Отдельный пакет.</p><pre><code>builder.RegisterType&lt;Report&gt;();
+// Внедряем Func&lt;string, Report&gt;</code></pre></article>
   </div>
-  <pre><code>// Autofac: name передаёт вызывающий код, логгер берётся из DI
-public delegate Report ReportFactory(string name);</code></pre>
 </section>
 <section id="multiple">
   <h2>Две регистрации одного интерфейса</h2>

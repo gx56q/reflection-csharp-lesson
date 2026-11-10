@@ -11,7 +11,7 @@ p { margin: .65em 0; }
 .chain, .cards { display: flex; gap: .65rem; flex-wrap: wrap; }
 .chain { align-items: center; font-size: clamp(1rem, 2vw, 1.6rem); }
 .chain span, article { padding: .75rem 1rem; background: white; border-radius: .7rem; border: 1px solid #ccdadd; }
-.cards article { flex: 1 1 12rem; font-size: clamp(1rem, 1.65vw, 1.35rem); }
+.cards article { min-width: 0; flex: 1 1 12rem; font-size: clamp(1rem, 1.65vw, 1.35rem); }
 a { color: #075f60; text-underline-offset: .16em; }
 button { font: inherit; border: 1px solid #075f60; color: #075f60; background: white; border-radius: .5rem; padding: .42rem .8rem; cursor: pointer; }
 button:disabled { opacity: .45; cursor: default; }
@@ -42,7 +42,3 @@ article pre { font-size: clamp(.8rem, 1.65vw, 1.25rem); }
 .cover-map, .request-map, .fractal-preview { display: grid; align-items: center; gap: .55rem; }
 .cover-map { grid-template-columns: max-content auto max-content; width: fit-content; font-size: clamp(1.15rem, 3vw, 2.2rem); color: #075f60; }
 .cover-map span, .request-map span { background: white; border: 1px solid #bfd1d4; padding: .55rem .8rem; border-radius: .5rem; }
-
-.failure-steps { margin: .9rem 0 0; padding-left: 1.5em; }
-.failure-steps li + li { margin-top: .65em; }
-.failure-steps li:last-child { border-top: 1px solid #e4a6a0; padding-top: .65em; }
