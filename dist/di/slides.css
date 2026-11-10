@@ -19,3 +19,9 @@ button { font: inherit; border: 1px solid #075f60; color: #075f60; background: w
 button:disabled { opacity: .45; cursor: default; }
 :focus-visible { outline: 3px solid #075f60; outline-offset: 4px; }
 .source { font-size: .9rem; }
+
+pre { margin: .8rem 0; padding: .8rem 1rem; overflow: auto; background: #102832; color: #eff7f7; border-radius: .5rem; font-size: clamp(.9rem, 2vw, 1.4rem); line-height: 1.45; }
+article pre { font-size: clamp(.8rem, 1.65vw, 1.25rem); }
+.ok { color: #136048; }
+.fail { color: #a82724; }
+.code-error { color: #ffd0a0; }

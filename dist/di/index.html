@@ -2,40 +2,45 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=lesson60">
-<script src="slides.js?v=lesson60" defer></script>
+<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=examples">
+<script src="slides.js?v=examples" defer></script>
 </head>
 <body>
-<header><strong>Практика C#</strong></header>
+<header><strong>Практика C#</strong><a href="#start">Первый слайд</a></header>
 <main>
 <section id="start">
   <p class="tag">DI-контейнеры</p>
   <h1>Приложение запустилось. Ошибка осталась</h1>
   <div class="cards">
-    <article><h3>Забыли регистрацию</h3><p>Ошибка появляется при первом обращении к сервису.</p></article>
-    <article><h3>Зависимость живёт слишком долго</h3><p>Объект продолжает пользоваться данными, которые уже пора заменить.</p></article>
+    <article><h3>Забыли регистрацию</h3><p><code>GET /health</code> <strong class="ok">200</strong><br><code>GET /reports</code> <strong class="fail">500</strong></p></article>
+    <article><h3>Зависимость живёт слишком долго</h3><p>Борис открыл отчёт.<br>Сервис ищет данные <strong class="fail">Алисы</strong>.</p></article>
   </div>
 </section>
 <section id="registrations">
   <p class="tag">Регистрации</p>
-  <h2>Контейнер создаёт объект двумя способами</h2>
+  <h2>Регистрация по типу и через фабрику</h2>
   <div class="cards">
-    <article><h3>По типу</h3><p>Контейнер выбирает конструктор и подставляет его параметры.</p></article>
-    <article><h3>Через фабрику</h3><p>Контейнер вызывает переданную функцию. Например, она читает настройки и создаёт кэш.</p></article>
+    <article><h3>По типу</h3><pre><code>builder.RegisterType&lt;B&gt;();</code></pre><p>Список зависимостей берётся из конструктора <code>B</code>.</p></article>
+    <article><h3>Через фабрику</h3><pre><code>builder.Register(ctx =&gt; new B(
+    ctx.Resolve&lt;A&gt;()));</code></pre><p>Функция сама получает <code>A</code> и создаёт <code>B</code>.</p></article>
   </div>
 </section>
 <section id="missing">
   <p class="tag">Пропущенная регистрация</p>
   <h2>Редкий маршрут падает при первом вызове</h2>
   <div class="chain"><span>Запрос</span><b>→</b><span>Контроллер</span><b>→</b><span>Сервис не зарегистрирован</span></div>
-  <p class="lead">Если проверка при запуске этот случай не поймала, ошибка появится при создании контроллера. Остальные маршруты могут работать.</p>
+  <pre><code>builder.RegisterType&lt;B&gt;();
+<span class="code-error">container.Resolve&lt;B&gt;(); // B(A a), но A не зарегистрирован</span></code></pre>
 </section>
 <section id="scope">
   <p class="tag">Захваченная зависимость</p>
   <h2>Контекст первого пользователя остаётся в singleton</h2>
   <div class="chain"><span>Запрос Алисы</span><b>→</b><span>Общий сервис запоминает Алису</span></div>
   <div class="chain"><span>Запрос Бориса</span><b>→</b><span>Тот же сервис всё ещё использует Алису</span></div>
-  <p>Данные запроса должны жить в его области. Общий сервис может получить их при вызове метода.</p>
+  <pre><code>public sealed class DBProvider(UserContext userContext)
+{
+    <span class="code-error">public string UserId =&gt; userContext.UserId;</span>
+}</code></pre>
 </section>
 <section id="validation">
   <p class="tag">Проверка регистраций</p>
@@ -44,7 +49,11 @@
     <article><h3>В конструкторе</h3><p>Параметры видны до создания объекта.</p></article>
     <article><h3>В функции</h3><p>Кэш запрашивает настройки внутри фабрики. Встроенная проверка Microsoft DI её не запускает.</p></article>
   </div>
-  <p>В статье Контура для Autofac разбирают инструкции, из которых состоит функция, и ищут обращения к контейнеру.</p>
+  <pre><code>builder.Register(ctx =&gt; {
+    <span class="code-error">var settings = ctx.Resolve&lt;ISettings&gt;();</span>
+    return new MemoryCache(
+        new MemoryCacheOptions { SizeLimit = settings.CacheSize });
+});</code></pre>
 </section>
 <section id="choice">
   <p class="tag">Выбор контейнера</p>
@@ -54,7 +63,7 @@
     <article><h3>Ninject + Factory</h3><p>Генерирует реализацию интерфейса фабрики.</p></article>
     <article><h3>Autofac</h3><p>Даёт фабрики с параметрами и вложенные области.</p></article>
   </div>
-  <p>Скорость сравнивают на одинаковом наборе объектов. Время запуска и время повторного получения сервиса измеряют отдельно.</p>
+  <div class="chain"><span>Первый запуск</span><b>≠</b><span>Повторный запрос к контейнеру</span></div>
 </section>
 <section id="exercise">
   <p class="tag">Самостоятельная практика</p>
