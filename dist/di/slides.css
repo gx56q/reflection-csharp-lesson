@@ -24,7 +24,7 @@ article pre { font-size: clamp(.8rem, 1.65vw, 1.25rem); }
 .fail { color: #a82724; }
 .code-error { color: #ffd0a0; }
 
-.request-map, .fractal-preview { display: grid; align-items: center; gap: .55rem; }
+.cover-map, .request-map, .fractal-preview { display: grid; align-items: center; gap: .55rem; }
 .request-map span { background: white; border: 1px solid #bfd1d4; padding: .55rem .8rem; border-radius: .5rem; }
 .request-map { grid-template-columns: max-content auto max-content auto max-content; width: fit-content; font-size: clamp(.85rem, 2vw, 1.35rem); }
 .request-map .shared { grid-row: span 2; border-color: #075f60; }
@@ -39,3 +39,6 @@ article pre { font-size: clamp(.8rem, 1.65vw, 1.25rem); }
   .request-map .shared + b { display: none; }
 }
 #lifetimes p { margin: 0; }
+.cover-map, .request-map, .fractal-preview { display: grid; align-items: center; gap: .55rem; }
+.cover-map { grid-template-columns: max-content auto max-content; width: fit-content; font-size: clamp(1.15rem, 3vw, 2.2rem); color: #075f60; }
+.cover-map span, .request-map span { background: white; border: 1px solid #bfd1d4; padding: .55rem .8rem; border-radius: .5rem; }

@@ -2,13 +2,17 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=three">
+<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=title">
 <script src="slides.js?v=examples" defer></script>
 </head>
 <body>
 <main>
+<section id="cover">
+  <h1>DI-контейнеры</h1>
+  <div class="cover-map" aria-hidden="true"><span>Сервис</span><b>→</b><span>Зависимость</span></div>
+</section>
 <section id="lifetimes">
-  <h1>Три времени жизни в Microsoft DI</h1>
+  <h2>Три времени жизни в Microsoft DI</h2>
   <h3>Singleton</h3>
   <p>Один объект на всё приложение. Например, общий кэш.</p>
   <pre><code>services.AddSingleton&lt;ReportCache&gt;();</code></pre>
