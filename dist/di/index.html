@@ -42,13 +42,23 @@ class DBProvider(IHttpContextAccessor http)
     </article>
   </div>
 </section>
-<section id="registrations">
-  <h2>Регистрация по типу и через фабрику</h2>
+<section id="validation">
+  <h2>Когда нужна фабрика</h2>
   <div class="cards">
-    <article><h3>По типу</h3><pre><code>builder.RegisterType&lt;B&gt;();</code></pre><p>Список зависимостей берётся из конструктора <code>B</code>.</p></article>
-    <article><h3>Через фабрику</h3><pre><code>builder.Register(ctx =&gt; new B(
-    ctx.Resolve&lt;A&gt;()));</code></pre><p>Функция сама получает <code>A</code> и создаёт <code>B</code>.</p></article>
+    <article><h3>Обычно хватает конструктора</h3>
+      <pre><code>services.AddScoped&lt;ReportService&gt;();</code></pre>
+      <p>Контейнер сам передаст зарегистрированные зависимости. Их видно в конструкторе.</p>
+    </article>
+    <article><h3>Фабрика нужна для особой сборки</h3>
+      <pre><code>services.AddSingleton(sp =&gt; {
+    var s = sp
+        .GetRequiredService&lt;ISettings&gt;();
+    return new ReportCache(s.CacheSize);
+});</code></pre>
+      <p>Функция сама берёт настройки и передаёт размер кэша в конструктор.</p>
+    </article>
   </div>
+  <p><code>ValidateOnBuild</code> не запускает лямбду. Ошибка внутри фабрики проявится, когда она выполнится.</p>
 </section>
 <section id="missing">
   <h2>Проверка DI при запуске</h2>
@@ -73,24 +83,6 @@ var reports = scope.ServiceProvider
     .GetRequiredService&lt;ReportService&gt;();
 await reports.GenerateAsync(stoppingToken);</code></pre>
   <p>На каждый отчёт своя область. В конце контейнер освобождает её <code>DbContext</code>.</p>
-</section>
-<section id="validation">
-  <h2>Когда нужна фабрика</h2>
-  <div class="cards">
-    <article><h3>Обычно хватает конструктора</h3>
-      <pre><code>services.AddScoped&lt;ReportService&gt;();</code></pre>
-      <p>Контейнер сам передаст зарегистрированные зависимости. Их видно в конструкторе.</p>
-    </article>
-    <article><h3>Фабрика нужна для особой сборки</h3>
-      <pre><code>services.AddSingleton(sp =&gt; {
-    var s = sp
-        .GetRequiredService&lt;ISettings&gt;();
-    return new ReportCache(s.CacheSize);
-});</code></pre>
-      <p>Функция сама берёт настройки и передаёт размер кэша в конструктор.</p>
-    </article>
-  </div>
-  <p><code>ValidateOnBuild</code> не запускает лямбду. Ошибка внутри фабрики проявится, когда она выполнится.</p>
 </section>
 <section id="choice">
   <h2>Как выбрать DI-контейнер</h2>
