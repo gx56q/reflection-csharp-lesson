@@ -3,48 +3,63 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Управление зависимостями</title>
-<link rel="stylesheet" href="slides.css">
+<link rel="stylesheet" href="slides.css?v=pack">
 <script src="slides.js" defer></script>
 </head>
 <body>
 <main>
 <section id="cover">
   <h1>Управление зависимостями</h1>
-  <p class='lead'>Как API заказов подключает библиотеку скидок и обновляет её.</p>
+  <div class="chain"><span>Ссылки между проектами</span><b>→</b><span>Пакеты NuGet</span><b>→</b><span>Версии и публикация</span></div>
 </section>
 <section id="projects">
-  <h2>Ссылка на соседний проект</h2>
-  <div class="chain"><span>Orders.Api</span><b>→</b><span>Discounts</span><b>→</b><span>Money</span></div><pre><code>&lt;ProjectReference Include="../Discounts/Discounts.csproj" /&gt;</code></pre><div class="cards"><article><h3>Прямая</h3><p>API явно ссылается на Discounts.</p></article><article><h3>Транзитивная</h3><p>Money нужен Discounts и приходит в API через него.</p></article></div>
+  <h2>Откуда берётся зависимость</h2>
+  <div class="chain"><span>Tests</span><b>→</b><span>App</span><b>→</b><span>Core</span></div>
+<div class="cards"><article><h3>Tests → App</h3><p>Прямая ссылка. Её добавили в <code>Tests.csproj</code>.</p></article><article><h3>Tests → Core</h3><p>Транзитивная ссылка. Она приходит через <code>App</code>.</p></article></div>
+<pre><code>dotnet add Tests/Tests.csproj reference App/App.csproj
+&lt;ProjectReference Include="../App/App.csproj" /&gt;</code></pre>
 </section>
 <section id="install">
-  <h2>Как подключить пакет</h2>
-  <div class="chain"><span>Найти NodaTime</span><b>→</b><span>Проверить совместимость с .NET</span><b>→</b><span>Выбрать версию</span></div><pre><code>dotnet add Orders.Api/Orders.Api.csproj package NodaTime --version 3.2.0</code></pre><pre><code>&lt;PackageReference Include="NodaTime" Version="3.2.0" /&gt;</code></pre><p>API использует NodaTime, чтобы учитывать часовой пояс при запуске акции.</p>
+  <h2>Как выбрать пакет</h2>
+  <div class="cards"><article><h3>Найти</h3><p>В поиске NuGet вводим <strong>NodaTime</strong>. Сверяем владельца и исходники.</p></article><article><h3>Проверить</h3><p>Во вкладке <strong>Frameworks</strong> смотрим совместимость с нашим .NET.</p></article><article><h3>Установить</h3><p>Выбираем конкретный выпуск. Для примера взяли <strong>3.2.0</strong>.</p></article></div>
+<pre><code>dotnet add package NodaTime --version 3.2.0
+&lt;PackageReference Include="NodaTime" Version="3.2.0" /&gt;</code></pre>
 </section>
 <section id="restore">
-  <h2>Что делает restore</h2>
-  <div class="chain"><span>.csproj</span><b>→</b><span>Подбор версий</span><b>→</b><span>Локальный кеш</span></div><pre><code>dotnet restore
-dotnet list package --include-transitive
-dotnet nuget locals global-packages --list</code></pre><p>Если пакет уже есть в кеше, его можно взять оттуда. В <code>obj/project.assets.json</code> записано, что выбрал NuGet.</p>
+  <h2>Где искать результат restore</h2>
+  <div class="chain"><span>.csproj</span><b>→</b><span>NuGet выбирает версии</span><b>→</b><span>Берёт из кеша или скачивает</span></div>
+<div class="cards"><article><h3>Какие пакеты выбраны</h3><pre><code>dotnet list package --include-transitive</code></pre><p>Прямые и транзитивные. Полный граф в <code>obj/project.assets.json</code>.</p></article><article><h3>Где лежат файлы</h3><pre><code>dotnet nuget locals global-packages --list</code></pre><p>Путь к кешу. Внутри папки по ID пакета и версии.</p></article></div>
 </section>
 <section id="pack">
-  <h2>Как выпустить свою библиотеку</h2>
-  <div class="chain"><span>Discounts.csproj</span><b>→</b><span>dotnet pack</span><b>→</b><span>Shop.Discounts.1.2.0.nupkg</span></div><pre><code>dotnet pack Discounts/Discounts.csproj -c Release -o ./packages</code></pre><div class="cards"><article><h3>Папка</h3><p>Проверить установку локально.</p></article><article><h3>nuget.org</h3><p>Открыть пакет всем.</p></article><article><h3>Приватный источник</h3><p>Выдать доступ своей команде.</p></article></div>
+  <h2>Что указать в .csproj</h2>
+  <div class="cards package-example"><article><pre><code>&lt;Project Sdk="Microsoft.NET.Sdk"&gt;
+  &lt;PropertyGroup&gt;
+    &lt;TargetFramework&gt;net8.0&lt;/TargetFramework&gt;
+    &lt;PackageId&gt;Demo.TextKit&lt;/PackageId&gt;
+    &lt;Version&gt;1.2.0&lt;/Version&gt;
+    &lt;Authors&gt;Demo Team&lt;/Authors&gt;
+    &lt;Description&gt;Обработка текста&lt;/Description&gt;
+  &lt;/PropertyGroup&gt;
+&lt;/Project&gt;</code></pre></article><article><h3>Что увидит потребитель</h3><p><code>Demo.TextKit</code> — ID для поиска и установки.</p><p><code>net8.0</code> — цель сборки библиотеки.</p><p>Авторы и описание попадут в метаданные пакета.</p></article></div>
+</section>
+<section id="publish">
+  <h2>Собрать, проверить, отправить</h2>
+  <div class="chain"><span>dotnet pack</span><b>→</b><span>Установка в тестовый проект</span><b>→</b><span>dotnet nuget push</span></div>
+  <pre><code>dotnet pack -c Release -o ./packages
+dotnet nuget push ./packages/Demo.TextKit.1.2.0.nupkg --source &lt;источник&gt; --api-key &lt;ключ&gt;</code></pre>
+  <div class="cards"><article><h3>Локальная папка</h3><p>Проверить пакет до публикации.</p></article><article><h3>nuget.org</h3><p>Открытый пакет.</p></article><article><h3>Приватный источник</h3><p>Доступ по правилам команды.</p></article></div>
 </section>
 <section id="versions">
-  <h2>Что изменилось в скидках</h2>
-  <div class="cards"><article><h3>1.2.0 → 1.2.1</h3><p><strong>PATCH</strong></p><p>Исправили округление до копеек.</p></article><article><h3>1.2.0 → 1.3.0</h3><p><strong>MINOR</strong></p><p>Добавили расчёт скидки по промокоду. Старый метод работает.</p></article><article><h3>1.2.0 → 2.0.0</h3><p><strong>MAJOR</strong></p><p>Удалили старый метод. Код API придётся поменять.</p></article></div>
+  <h2>Что обещает номер версии</h2>
+  <div class="cards"><article><h3>1.2.0 → 1.2.1</h3><p><strong>PATCH</strong></p><p>Исправили чтение пустой строки в CSV. Контракт прежний.</p></article><article><h3>1.2.0 → 1.3.0</h3><p><strong>MINOR</strong></p><p>Добавили поддержку другого разделителя. Старые вызовы работают.</p></article><article><h3>1.2.0 → 2.0.0</h3><p><strong>MAJOR</strong></p><p>Удалили публичный метод. Клиентам нужно поменять код.</p></article></div>
 </section>
 <section id="preview">
   <h2>Предварительные версии</h2>
-  <div class="chain"><span><code>1.3.0-preview.1</code></span><b>→</b><span><code>1.3.0-preview.2</code></span><b>→</b><span><code>1.3.0</code></span></div>
-  <p class="lead">Команда может попробовать новые скидки до стабильного релиза.</p>
-  <pre><code>&lt;PackageReference Include="Shop.Discounts"
-                  Version="1.3.0-preview.1" /&gt;</code></pre>
-  <p>В NuGet Package Manager включи <strong>Include prerelease</strong>, чтобы увидеть такие версии.</p>
+  <div class="chain"><span><code>2.0.0-preview.1</code></span><b>→</b><span><code>2.0.0-preview.2</code></span><b>→</b><span><code>2.0.0</code></span></div><p class="lead">Потребители могут проверить новый API до стабильного выпуска.</p><pre><code>dotnet add package Example.Csv --version 2.0.0-preview.1</code></pre><p>Учебный ID. В NuGet Package Manager такие версии видны с <strong>Include prerelease</strong>.</p>
 </section>
 <section id="choice">
-  <h2>Ссылка на проект или пакет?</h2>
-  <div class="cards"><article><h3>ProjectReference</h3><div class="chain"><span>API</span><b>→</b><span>Исходники</span></div><p>Меняешь API и скидки вместе. Следующая сборка возьмёт изменения.</p></article><article><h3>PackageReference</h3><div class="chain"><span>API</span><b>→</b><span>Скидки 1.2.0</span></div><p>Библиотека выпускается отдельно. API обновляет её в своём темпе.</p></article></div>
+  <h2>Проект или пакет?</h2>
+  <div class="cards"><article><h3>ProjectReference</h3><div class="chain"><span>Приложение</span><b>→</b><span>Сборка проекта</span></div><p>Удобно, когда код меняется и проверяется вместе.</p></article><article><h3>PackageReference</h3><div class="chain"><span>Приложение</span><b>→</b><span>Версия пакета</span></div><p>Удобно, когда библиотека выпускается отдельно.</p></article></div>
 </section>
 </main>
 <nav aria-label="Слайды"><button id="prev" type="button">← Назад</button><span id="counter" aria-live="polite"></span><button id="next" type="button">Дальше →</button><button id="fullscreen" type="button" hidden>На весь экран</button></nav>
