@@ -13,11 +13,11 @@
   <h1>DI-контейнеры</h1>
 </section>
 <section id="start">
-  <p class="tag">Два сбоя в работе приложения</p>
-  <h2>Приложение запустилось. Ошибка осталась</h2>
+  <p class="tag">Примеры из статьи Контура</p>
+  <h2>Два сбоя из-за настроек DI</h2>
   <div class="cards">
-    <article><h3>Забыли регистрацию</h3><p><code>GET /health</code> <strong class="ok">200</strong><br><code>GET /reports</code> <strong class="fail">500</strong></p></article>
-    <article><h3>Зависимость живёт слишком долго</h3><p>Борис открыл отчёт.<br>Сервис ищет данные <strong class="fail">Алисы</strong>.</p></article>
+    <article><h3>Сервис не зарегистрирован</h3><p><code>GET /health</code> <strong class="ok">200</strong><br><code>GET /reports</code> <strong class="fail">500</strong></p></article>
+    <article><h3>Singleton сохранил контекст Алисы</h3><p>Борис открыл отчёт.<br>Сервис ищет данные <strong class="fail">Алисы</strong>.</p></article>
   </div>
 </section>
 <section id="registrations">
