@@ -91,7 +91,7 @@ var app = builder.Build();</code></pre>
       <p>Функция сама берёт настройки и передаёт размер кэша в конструктор.</p>
     </article>
   </div>
-  <p><code>ValidateOnBuild</code> не запускает лямбду. В тесте запроси <code>ReportCache</code> из контейнера.</p>
+  <p><code>ValidateOnBuild</code> не запускает лямбду. Ошибка внутри фабрики проявится, когда она выполнится.</p>
 </section>
 <section id="choice">
   <h2>Как выбрать контейнер</h2>
