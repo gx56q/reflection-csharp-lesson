@@ -10,30 +10,32 @@
 <main>
 <section id="start">
   <p class="tag">DI-контейнеры</p>
-  <h1>Кто создаёт объекты?</h1>
-  <p class="lead">Приложение отправляет письма. В тесте отправитель записывает письма в список. Где выбрать, какой отправитель нужен?</p>
-  <div class="chain"><span>Запуск</span><b>→</b><span>Выбор реализации</span><b>→</b><span>Сервис получает отправителя</span></div>
+  <h1>Где собирается приложение?</h1>
+  <p class="lead">Где в проекте выбирают реализации и связывают их между собой? Найдите это место в знакомом приложении.</p>
+  <div class="chain"><span>Точка входа</span><b>→</b><span>Регистрации</span><b>→</b><span>Главный объект</span>
+  </div><p class="source"><a href="https://habr.com/ru/articles/559888/">Хабр · Инициализация ASP.NET</a></p>
 </section>
 <section id="lifetimes">
   <p class="tag">Время жизни</p>
-  <h2>Две операции. Сколько объектов?</h2>
+  <h2>Сколько объектов создаст контейнер?</h2>
   <div class="cards">
     <article><h3>Transient</h3><p>Новый при каждом разрешении.</p></article>
     <article><h3>Scoped</h3><p>Один на область. Например, на запрос.</p></article>
     <article><h3>Singleton</h3><p>Один на регистрацию в корневом провайдере.</p></article>
   </div>
-  <p class="lead">Фоновая служба работает всё время. Сколько должен жить контекст базы для одной задачи?</p>
+  <p class="lead">Два сервиса в одном запросе используют контекст базы. Когда им нужен общий экземпляр?</p>
+  <p class="source"><a href="https://habr.com/ru/articles/559888/">Хабр · Время жизни сервисов</a></p>
 </section>
 <section id="scope">
   <p class="tag">Рабочий сценарий</p>
-  <h2>Область на одну операцию</h2>
-  <div class="chain"><span>Фоновая служба</span><b>→</b><span>Открыть область</span><b>→</b><span>Обработать задачу</span><b>→</b><span>Закрыть область</span></div>
-  <p class="lead">Служба продолжает работать. Контекст базы освобождается вместе с областью.</p>
-  <p class="source"><a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/scoped-service">Microsoft Learn · Scoped services in BackgroundService</a></p>
+  <h2>Singleton держит зависимость</h2>
+  <div class="chain"><span>Singleton</span><b>→</b><span>Transient</span></div>
+  <p class="lead">Singleton создали один раз. Сколько раз контейнер создаст transient для его конструктора?</p>
+  <p class="source"><a href="https://habr.com/ru/companies/skbkontur/articles/925146/">Контур на Хабре · Захваченные зависимости</a></p>
 </section>
 <section id="choice">
   <p class="tag">Выбор контейнера</p>
-  <h2>За что берём ещё пакет?</h2>
+  <h2>Когда нужен другой контейнер?</h2>
   <div class="cards">
     <article><h3>Microsoft DI</h3><p>Обычная сборка, времена жизни, коллекции, ключи.</p><p>Фабрики пишем явно.</p></article>
     <article><h3>Ninject + Factory</h3><p>Создаёт реализацию интерфейса фабрики. Так устроена домашка.</p></article>
@@ -49,8 +51,8 @@
     <article><h3>Первый запрос</h3><p>Первое получение объекта и его зависимостей.</p></article>
     <article><h3>Повторный запрос</h3><p>Получение объекта после прогрева.</p></article>
   </div>
-  <p class="lead">Если в таблице быстрее GetService, станет ли быстрее операция пользователя?</p>
-  <p class="source"><a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-8/">.NET Blog · Performance Improvements in .NET 8</a></p>
+  <p class="lead">Автор сравнил ручную сборку, Pure.DI и Autofac на одном графе объектов. Какой замер нужен для нашего приложения?</p>
+  <p class="source"><a href="https://habr.com/ru/articles/1062576/">Хабр · Pure.DI vs Autofac</a></p>
 </section>
 <section id="exercise">
   <p class="tag">Самостоятельная практика</p>
