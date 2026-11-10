@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=examples">
+<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=projector">
 <script src="slides.js?v=examples" defer></script>
 </head>
 <body>
@@ -10,7 +10,7 @@
 <main>
 <section id="cover">
   <p class="tag">Проектирование на C#</p>
-  <h1>DI-контейнеры</h1>
+  <h1>DI-контейнеры</h1><div class="cover-map" aria-hidden="true"><span>Сервис</span><b>→</b><span>Зависимость</span></div>
 </section>
 <section id="start">
   <p class="tag">Примеры из статьи Контура</p>
@@ -32,15 +32,17 @@
 <section id="missing">
   <p class="tag">Пропущенная регистрация</p>
   <h2>Редкий маршрут падает при первом вызове</h2>
-  <div class="chain"><span>Запрос</span><b>→</b><span>Контроллер</span><b>→</b><span>Сервис не зарегистрирован</span></div>
+  <div class="chain diagram"><span>GET /reports</span><b>→</b><span><code>B(A a)</code></span><b>→</b><span class="broken"><code>A</code> не зарегистрирован</span></div>
   <pre><code>builder.RegisterType&lt;B&gt;();
 <span class="code-error">container.Resolve&lt;B&gt;(); // B(A a), но A не зарегистрирован</span></code></pre>
 </section>
 <section id="scope">
   <p class="tag">Захваченная зависимость</p>
   <h2>Контекст первого пользователя остаётся в singleton</h2>
-  <div class="chain"><span>Запрос Алисы</span><b>→</b><span>Общий сервис запоминает Алису</span></div>
-  <div class="chain"><span>Запрос Бориса</span><b>→</b><span>Тот же сервис всё ещё использует Алису</span></div>
+  <div class="request-map">
+    <span>Запрос Алисы</span><b>→</b><span class="shared"><code>DBProvider</code><br>один на два запроса</span><b>→</b><span class="stored">Контекст Алисы</span>
+    <span>Запрос Бориса</span><b>→</b>
+  </div>
   <pre><code>public sealed class DBProvider(UserContext userContext)
 {
     <span class="code-error">public string UserId =&gt; userContext.UserId;</span>
@@ -67,7 +69,8 @@
     <article><h3>Ninject + Factory</h3><p>Генерирует реализацию интерфейса фабрики.</p></article>
     <article><h3>Autofac</h3><p>Даёт фабрики с параметрами и вложенные области.</p></article>
   </div>
-  <div class="chain"><span>Первый запуск</span><b>≠</b><span>Повторный запрос к контейнеру</span></div>
+  <pre><code>// Autofac: name передаёт вызывающий код, логгер берётся из DI
+public delegate Report ReportFactory(string name);</code></pre>
 </section>
 <section id="exercise">
   <p class="tag">Самостоятельная практика</p>
@@ -75,8 +78,12 @@
   <p class="lead">Перенесите сборку приложения на Microsoft DI в отдельной копии проекта.</p>
   <div class="cards">
     <article><h3>Окно</h3><p>Открывается. Все команды на месте.</p></article>
-    <article><h3>Два фрактала</h3><p>Кривая Коха рисуется. Дракон рисуется после OK.</p></article>
+    <article><h3>Два фрактала</h3><p>Кривая Коха и дракон рисуются.</p></article>
     <article><h3>Настройки</h3><p>Цвет и размер применяются при рисовании.</p></article>
+  </div>
+  <div class="fractal-preview">
+    <figure><img src="koch.png" alt="Окно с кривой Коха"><figcaption>Кривая Коха</figcaption></figure>
+    <figure><img src="dragon.png" alt="Окно с кривой дракона"><figcaption>Дракон</figcaption></figure>
   </div>
 </section>
 </main>
