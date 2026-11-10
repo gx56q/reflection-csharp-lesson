@@ -13,7 +13,7 @@
   <h1>Где собирается приложение?</h1>
   <p class="lead">Где в проекте выбирают реализации и связывают их между собой? Найдите это место в знакомом приложении.</p>
   <div class="chain"><span>Точка входа</span><b>→</b><span>Регистрации</span><b>→</b><span>Главный объект</span>
-  </div><p class="source"><a href="https://habr.com/ru/articles/559888/">Хабр · Инициализация ASP.NET</a></p>
+  </div>
 </section>
 <section id="lifetimes">
   <p class="tag">Время жизни</p>
@@ -24,14 +24,14 @@
     <article><h3>Singleton</h3><p>Один на регистрацию в корневом провайдере.</p></article>
   </div>
   <p class="lead">Два сервиса в одном запросе используют контекст базы. Когда им нужен общий экземпляр?</p>
-  <p class="source"><a href="https://habr.com/ru/articles/559888/">Хабр · Время жизни сервисов</a></p>
+
 </section>
 <section id="scope">
   <p class="tag">Рабочий сценарий</p>
   <h2>Singleton держит зависимость</h2>
   <div class="chain"><span>Singleton</span><b>→</b><span>Transient</span></div>
   <p class="lead">Singleton создали один раз. Сколько раз контейнер создаст transient для его конструктора?</p>
-  <p class="source"><a href="https://habr.com/ru/companies/skbkontur/articles/925146/">Контур на Хабре · Захваченные зависимости</a></p>
+
 </section>
 <section id="choice">
   <p class="tag">Выбор контейнера</p>
@@ -41,7 +41,7 @@
     <article><h3>Ninject + Factory</h3><p>Создаёт реализацию интерфейса фабрики. Так устроена домашка.</p></article>
     <article><h3>Autofac</h3><p>Поддерживает Lazy, фабрики с параметрами и вложенные области.</p></article>
   </div>
-  <p class="source"><a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview">Microsoft</a> · <a href="https://github.com/ninject/Ninject.Extensions.Factory">Ninject</a> · <a href="https://docs.autofac.org/en/latest/resolve/relationships.html">Autofac</a></p>
+
 </section>
 <section id="speed">
   <p class="tag">Производительность</p>
@@ -52,7 +52,7 @@
     <article><h3>Повторный запрос</h3><p>Получение объекта после прогрева.</p></article>
   </div>
   <p class="lead">Автор сравнил ручную сборку, Pure.DI и Autofac на одном графе объектов. Какой замер нужен для нашего приложения?</p>
-  <p class="source"><a href="https://habr.com/ru/articles/1062576/">Хабр · Pure.DI vs Autofac</a></p>
+
 </section>
 <section id="exercise">
   <p class="tag">Самостоятельная практика</p>
@@ -63,7 +63,7 @@
     <article><h3>Два фрактала</h3><p>Кривая Коха рисуется. Дракон рисуется после OK.</p></article>
     <article><h3>Настройки</h3><p>Цвет и размер применяются при рисовании.</p></article>
   </div>
-  <p class="source"><a href="https://ulearn.me/course/cs2/Praktika_Fractal_Painter_DI_container__ea0283d6-e0a4-4a88-a427-df4f6dfec831">Исходное задание</a> · <a href="https://docs.avaloniaui.net/docs/app-development/dependency-injection">Avalonia · DI</a></p>
+
 </section>
 <section id="finish">
   <p class="tag">Проверка</p>

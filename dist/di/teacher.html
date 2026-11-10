@@ -20,6 +20,7 @@
       <a href="#troubleshooting">Если не работает</a>
       <a href="#exercise-guide">Задание и приёмка</a>
       <a href="#review">Вопросы и ответы</a>
+      <a href="#sources">Источники</a>
     </nav>
     <main class="teacher">
     <section class="hero">
@@ -90,6 +91,19 @@ services.AddSingleton&lt;IImageController&gt;(sp =&gt; sp.GetRequiredService&lt;
       <details><summary>Зачем фабрике DragonSettings?</summary><p>Настройки появляются после диалога. Контроллер и палитра известны при сборке фабрики, настройки конкретного рисования приходят в её метод.</p></details>
       <details><summary>Что будет, если singleton держит scoped-сервис?</summary><p>Сервис переживёт предполагаемую область. Например, фоновая задача может удерживать один контекст базы на все операции. Создай область на одну операцию через <code>IServiceScopeFactory</code> и разрешай сервисы внутри неё. Включи <code>ValidateScopes</code> и <code>ValidateOnBuild</code>. Тело лямбды регистрации при проверке графа не исполняется.</p></details>
       <details><summary>Кто вызывает Dispose?</summary><p>Провайдер освобождает созданные им сервисы при закрытии соответствующей области или корневого провайдера. Экземпляр, переданный в регистрацию готовым объектом, освобождает его владелец. <code>Scoped</code> означает «один на область». В desktop-приложении области создаёт сам код.</p></details>
+    </section>
+    <section id="sources">
+      <h2>Источники и материалы</h2>
+      <ul>
+        <li><a href="https://habr.com/ru/articles/559888/">Хабр · Время жизни сервисов</a></li>
+        <li><a href="https://habr.com/ru/companies/skbkontur/articles/925146/">Контур на Хабре · Захваченные зависимости</a></li>
+        <li><a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview">Microsoft</a></li>
+        <li><a href="https://github.com/ninject/Ninject.Extensions.Factory">Ninject</a></li>
+        <li><a href="https://docs.autofac.org/en/latest/resolve/relationships.html">Autofac</a></li>
+        <li><a href="https://habr.com/ru/articles/1062576/">Хабр · Pure.DI vs Autofac</a></li>
+        <li><a href="https://ulearn.me/course/cs2/Praktika_Fractal_Painter_DI_container__ea0283d6-e0a4-4a88-a427-df4f6dfec831">Исходное задание</a></li>
+        <li><a href="https://docs.avaloniaui.net/docs/app-development/dependency-injection">Avalonia · DI</a></li>
+      </ul>
     </section>
   </main>
   </div>
