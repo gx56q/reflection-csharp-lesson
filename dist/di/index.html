@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=di-wrap">
+<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=di-path">
 <script src="slides.js?v=fullscreen" defer></script>
 </head>
 <body>
@@ -97,16 +97,27 @@ await reports.GenerateAsync(stoppingToken);</code></pre>
   <div class="cards">
     <article>
       <h3>Microsoft DI</h3>
-      <p><strong>Новый ASP.NET Core проект.</strong></p>
-      <p>Уже встроен. Умеет внедрять зависимости через конструктор, выдавать список реализаций и выбирать сервис по ключу.</p>
+      <p><strong>Подключить оплату в ASP.NET Core</strong></p>
+      <div class="di-path"><span>Заказ</span><b>→</b><span>Оплата</span></div>
+      <pre><code>services.AddScoped&lt;
+    IPayment, CardPayment&gt;();</code></pre>
+      <p>Встроенного контейнера хватает для обычной регистрации.</p>
     </article>
     <article>
       <h3>Autofac</h3>
-      <p><strong>Нужны возможности сверх встроенных.</strong></p>
-      <p>Например, зарегистрировать обработчики из сборки по правилу или обернуть сервис декоратором для логирования.</p>
+      <p><strong>Логировать каждый вызов оплаты</strong></p>
+      <div class="di-path"><span>Заказ</span><b>→</b><span>Лог</span><b>→</b><span>Оплата</span></div>
+      <pre><code>builder.RegisterDecorator&lt;
+    LoggedPayment, IPayment&gt;();</code></pre>
+      <p>Декоратор пишет в лог и передаёт вызов сервису оплаты.</p>
     </article>
     <article>
-      <h3>Simple Injector</h3><p><strong>Нужна подробная проверка настроек.</strong></p><p><code>Verify()</code> пробует создать сервисы и сообщает, например, что долгоживущий сервис удерживает зависимость с коротким временем жизни.</p></article>
+      <h3>Simple Injector</h3>
+      <p><strong>Проверить настройки на старте</strong></p>
+      <div class="di-path"><span>Старт</span><b>→</b><span>Проверка DI</span></div>
+      <pre><code>container.Verify();</code></pre>
+      <p>Пробует создать сервисы и проверяет, как связаны их времена жизни.</p>
+    </article>
   </div>
 </section>
 <section id="multiple">
