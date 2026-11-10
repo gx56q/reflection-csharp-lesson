@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Управление зависимостями</title>
+<link rel="stylesheet" href="slides.css">
+<script src="slides.js" defer></script>
+</head>
+<body>
+<main>
+<section id="cover">
+  <h1>Управление зависимостями</h1>
+  <div class="chain"><span>Проект</span><b>→</b><span>Библиотека</span><b>→</b><span>Пакет NuGet</span></div>
+</section>
+<section id="projects">
+  <h2>Ссылка на другой проект</h2>
+  <div class="chain"><span>Tests</span><b>→</b><span>App</span><b>→</b><span>Core</span></div>
+<pre><code>dotnet add Tests/Tests.csproj reference App/App.csproj</code></pre>
+<p>Для <code>Tests</code> проект <code>App</code> прямой, а <code>Core</code> транзитивный.</p>
+</section>
+<section id="install">
+  <h2>Как выбрать и добавить пакет</h2>
+  <div class="chain"><span>Найти на nuget.org</span><b>→</b><span>Проверить версию и .NET</span><b>→</b><span>Добавить в проект</span></div>
+<pre><code>dotnet add package FakeItEasy --version 8.3.0</code></pre>
+<pre><code>&lt;PackageReference Include="FakeItEasy" Version="8.3.0" /&gt;</code></pre>
+<p>Пример из FileSender. Команду выполняют в папке нужного <code>.csproj</code>.</p>
+</section>
+<section id="restore">
+  <h2>Куда скачиваются пакеты</h2>
+  <div class="chain"><span>Project.csproj</span><b>→</b><span>dotnet restore</span><b>→</b><span>Локальная папка пакетов</span></div>
+<pre><code>dotnet restore
+dotnet nuget locals global-packages --list
+dotnet list package --include-transitive</code></pre>
+<p>Прямые пакеты указаны в проекте. Транзитивные приходят через другие пакеты или проекты.</p>
+</section>
+<section id="pack">
+  <h2>От библиотеки до пакета</h2>
+  <div class="chain"><span>Core.csproj</span><b>→</b><span>dotnet pack</span><b>→</b><span>Core.1.2.0.nupkg</span></div>
+<pre><code>dotnet pack Core/Core.csproj -c Release -o ./packages -p:PackageVersion=1.2.0</code></pre>
+<div class="cards"><article><h3>Локальная папка</h3><p>Проверить пакет у себя.</p></article><article><h3>nuget.org</h3><p>Открытая публикация.</p></article><article><h3>Приватный источник</h3><p>Для команды или компании.</p></article></div>
+</section>
+<section id="versions">
+  <h2>Что говорит версия пакета</h2>
+  <div class="cards"><article><h3>1.2.0 → 1.2.1</h3><p>PATCH. Исправили ошибку, старый код работает.</p></article><article><h3>1.2.0 → 1.3.0</h3><p>MINOR. Добавили метод, старый код работает.</p></article><article><h3>1.2.0 → 2.0.0</h3><p>MAJOR. Удалили публичный метод, клиентам надо менять код.</p></article></div>
+</section>
+<section id="exercise">
+  <h2>FileSender</h2>
+  <div class="chain"><span>Распознать</span><b>→</b><span>Проверить</span><b>→</b><span>Подписать</span><b>→</b><span>Отправить</span></div>
+<p class="lead">Допишите тесты <code>SendFiles</code> в заготовке.</p>
+<p><a href="FileSender.zip" download>Скачать заготовку</a> · <a href="https://ulearn.me/course/cs2/Aktivnost_FileSender__1b0d1cd3-dec2-4d91-aadb-1a17c623c9bd">Условие в ulearn</a></p>
+</section>
+</main>
+<nav aria-label="Слайды"><button id="prev" type="button">← Назад</button><span id="counter" aria-live="polite"></span><button id="next" type="button">Дальше →</button><button id="fullscreen" type="button" hidden>На весь экран</button></nav>
+</body>
+</html>

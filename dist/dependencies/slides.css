@@ -1,0 +1,21 @@
+:root { color-scheme: light; font: 18px/1.45 system-ui, sans-serif; background: #eef3f3; color: #102832; }
+body { margin: 0; min-height: 100dvh; display: grid; grid-template-rows: 1fr auto; }
+nav { padding: .8rem clamp(1rem, 5vw, 4rem); display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+nav { flex-wrap: wrap; border-top: 1px solid #bfd1d4; }
+main { display: grid; align-items: center; }
+section { box-sizing: border-box; width: min(100%, 80rem); margin: auto; padding: clamp(1rem, 4vw, 3rem) clamp(1rem, 6vw, 5rem); }
+h1, h2 { font-size: clamp(2rem, 5.1vw, 4.7rem); letter-spacing: -.045em; line-height: 1.04; margin: .22em 0 .45em; }
+h3 { margin: 0 0 .35em; font-size: clamp(1.25rem, 2.3vw, 2rem); }
+p { margin: .65em 0; }
+.lead { font-size: clamp(1.2rem, 2.6vw, 2.15rem); max-width: 35em; }
+.chain, .cards { display: flex; gap: .65rem; flex-wrap: wrap; }
+.chain { align-items: center; font-size: clamp(1rem, 2vw, 1.6rem); }
+.chain span, article { padding: .75rem 1rem; background: white; border-radius: .7rem; border: 1px solid #ccdadd; }
+.cards article { min-width: 0; flex: 1 1 12rem; font-size: clamp(1rem, 1.65vw, 1.35rem); }
+a { color: #075f60; text-underline-offset: .16em; }
+button { font: inherit; border: 1px solid #075f60; color: #075f60; background: white; border-radius: .5rem; padding: .42rem .8rem; cursor: pointer; }
+button:disabled { opacity: .45; cursor: default; }
+:focus-visible { outline: 3px solid #075f60; outline-offset: 4px; }
+.source { font-size: .9rem; }
+
+pre { margin: .8rem 0; padding: .8rem 1rem; white-space: pre-wrap; overflow-wrap: anywhere; background: #102832; color: #eff7f7; border-radius: .5rem; font-size: clamp(.9rem, 2vw, 1.4rem); line-height: 1.45; }
