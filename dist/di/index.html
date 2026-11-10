@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=di-checks">
+<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=di-examples">
 <script src="slides.js?v=fullscreen" defer></script>
 </head>
 <body>
@@ -91,7 +91,8 @@ var app = builder.Build();</code></pre>
     </article>
     <article><h3>Фабрика нужна для особой сборки</h3>
       <pre><code>services.AddSingleton(sp =&gt; {
-    var s = sp.GetRequiredService&lt;ISettings&gt;();
+    var s = sp
+        .GetRequiredService&lt;ISettings&gt;();
     return new ReportCache(s.CacheSize);
 });</code></pre>
       <p>Функция сама берёт настройки и передаёт размер кэша в конструктор.</p>
@@ -105,10 +106,13 @@ var app = builder.Build();</code></pre>
   <div class="cards">
     <article><h3>Microsoft DI</h3><p>Уже есть в ASP.NET Core. Для этой задачи пишем маленькую фабрику сами.</p><pre><code>services.AddTransient&lt;
     IReportFactory, ReportFactory&gt;();</code></pre></article>
-    <article><h3>Ninject + Factory</h3><p>Так устроен исходный Fractal Painter. Расширение реализует интерфейс фабрики за нас.</p><pre><code>kernel.Bind&lt;IReportFactory&gt;()
+    <article><h3>Ninject + Factory</h3><p>Так устроен исходный Fractal Painter. Расширение реализует интерфейс фабрики за нас.</p><pre><code>kernel
+    .Bind&lt;IReportFactory&gt;()
     .ToFactory();</code></pre></article>
-    <article><h3>Autofac</h3><p>Умеет сам создавать делегаты фабрик и даёт вложенные области. Отдельный пакет.</p><pre><code>builder.RegisterType&lt;Report&gt;();
-// Внедряем Func&lt;string, Report&gt;</code></pre></article>
+    <article><h3>Autofac</h3><p>Умеет сам создавать делегаты фабрик и даёт вложенные области. Отдельный пакет.</p><pre><code>builder
+    .RegisterType&lt;Report&gt;();
+// Параметр конструктора:
+// Func&lt;string, Report&gt;</code></pre></article>
   </div>
 </section>
 <section id="multiple">
