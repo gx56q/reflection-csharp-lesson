@@ -65,15 +65,15 @@ var app = builder.Build();</code></pre>
   </div>
 </section>
 <section id="scope">
-  <h2>Контекст первого пользователя остаётся в singleton</h2>
-  <div class="request-map">
-    <span>Запрос Алисы</span><b>→</b><span class="shared"><code>DBProvider</code><br>один на два запроса</span><b>→</b><span class="stored">Контекст Алисы</span>
-    <span>Запрос Бориса</span><b>→</b>
-  </div>
-  <pre><code>public sealed class DBProvider(UserContext userContext)
-{
-    <span class="code-error">public string UserId =&gt; userContext.UserId;</span>
-}</code></pre>
+  <h2>Scoped-сервис в фоновой задаче</h2>
+  <div class="chain"><span>Одна задача</span><b>→</b><span>Своя область DI</span><b>→</b><span>Сервис внутри области</span></div>
+  <pre><code>// scopeFactory получаем в конструкторе фонового сервиса
+await using var scope = scopeFactory.CreateAsyncScope();
+var reports = scope.ServiceProvider
+    .GetRequiredService&lt;ReportService&gt;();
+
+await reports.GenerateAsync(stoppingToken);</code></pre>
+  <p>ASP.NET Core открывает область для HTTP-запроса. Фоновая задача открывает её сама.</p>
 </section>
 <section id="validation">
   <h2>Когда нужна фабрика</h2>
