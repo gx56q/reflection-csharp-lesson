@@ -1,0 +1,36 @@
+:root { color-scheme: light; font: 18px/1.55 system-ui, sans-serif; color: #142937; background: #edf4f5; }
+body { margin: 0; }
+header, main { max-width: 66rem; margin: auto; padding: 1.25rem; }
+header { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; align-items: center; }
+header strong { margin-right: auto; }
+a { color: #075f63; text-underline-offset: .16em; }
+a:focus-visible, summary:focus-visible { outline: 3px solid #075f63; outline-offset: 4px; }
+section { background: white; border: 1px solid #cedee0; border-radius: 1rem; padding: clamp(1.2rem, 4vw, 3rem); margin-bottom: 1.5rem; scroll-margin-top: 1rem; }
+h1, h2, h3 { line-height: 1.13; margin-top: 0; }
+h1 { font-size: clamp(2.4rem, 7vw, 5rem); margin-bottom: .5em; }
+h2 { font-size: clamp(1.6rem, 3vw, 2.5rem); }
+.eyebrow { color: #075f63; font-weight: 750; letter-spacing: .04em; }
+.show { font-size: clamp(1.2rem, 2.4vw, 1.7rem); }
+.show section { min-height: min(58vh, 32rem); }
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: 0; list-style: none; }
+.flow li { background: #e6f4f1; padding: .5rem .8rem; border-radius: .5rem; }
+.flow .arrow { background: transparent; padding: 0; }
+.teacher { max-width: 53rem; }
+.teacher h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); }
+.teacher section { padding: clamp(1rem, 3vw, 2rem); }
+details { padding: .7rem 0; border-top: 1px solid #cedee0; }
+summary { cursor: pointer; font-weight: 700; }
+pre { background: #eaf2f4; border-radius: .6rem; padding: 1rem; overflow: auto; font-size: .82rem; }
+li + li { margin-top: .35em; }
+.flow li { margin-top: 0; }
+.pictures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+.pictures figure { margin: 0; }
+.pictures img { display: block; width: 100%; height: auto; max-height: 46vh; object-fit: contain; object-position: left; }
+.pictures figcaption { margin-top: .5rem; }
+.show .sources { min-height: auto; font-size: 1rem; }
+@media (max-width: 640px) { .pictures { grid-template-columns: 1fr; } }
+@media print {
+  :root { background: white; }
+  header { display: none; }
+  .show section { break-after: page; }
+}
