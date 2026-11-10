@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=title">
+<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=report-flow">
 <script src="slides.js?v=examples" defer></script>
 </head>
 <body>
@@ -24,10 +24,22 @@
   <pre><code>services.AddTransient&lt;ReportFormatter&gt;();</code></pre>
 </section>
 <section id="start">
-  <h2>Два сбоя из-за настроек DI</h2>
+  <h2>Как настройки DI ломают отчёты</h2>
   <div class="cards">
-    <article><h3>Сервис не зарегистрирован</h3><p><code>GET /health</code> <strong class="ok">200</strong><br><code>GET /reports</code> <strong class="fail">500</strong></p></article>
-    <article><h3>Singleton сохранил контекст Алисы</h3><p>Борис открыл отчёт.<br>Сервис ищет данные <strong class="fail">Алисы</strong>.</p></article>
+    <article><h3>Отчёт не открывается</h3>
+      <ol class="failure-steps">
+        <li><code>GET /reports</code> запрашивает <code>ReportService</code>.</li>
+        <li>Контейнеру нужен <code>IReportStore</code> для конструктора.</li>
+        <li class="fail"><strong>Хранилище не зарегистрировали.</strong> Сервис не создаётся, запрос получает 500.</li>
+      </ol>
+    </article>
+    <article><h3>Отчёт строится для другого пользователя</h3>
+      <ol class="failure-steps">
+        <li>Алиса открывает отчёт. <code>DBProvider</code> получает её контекст.</li>
+        <li>Борис открывает отчёт. Контейнер отдаёт тот же <code>DBProvider</code>: это singleton.</li>
+        <li class="fail"><strong>Провайдер всё ещё хранит контекст Алисы.</strong> Запрос к БД идёт от её имени.</li>
+      </ol>
+    </article>
   </div>
 </section>
 <section id="registrations">
