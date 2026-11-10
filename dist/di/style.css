@@ -23,12 +23,7 @@ summary { cursor: pointer; font-weight: 700; }
 pre { background: #eaf2f4; border-radius: .6rem; padding: 1rem; overflow: auto; font-size: .82rem; }
 li + li { margin-top: .35em; }
 .flow li { margin-top: 0; }
-.pictures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
-.pictures figure { margin: 0; }
-.pictures img { display: block; width: 100%; height: auto; max-height: 46vh; object-fit: contain; object-position: left; }
-.pictures figcaption { margin-top: .5rem; }
 .show .sources { min-height: auto; font-size: 1rem; }
-@media (max-width: 640px) { .pictures { grid-template-columns: 1fr; } }
 @media print {
   :root { background: white; }
   header { display: none; }

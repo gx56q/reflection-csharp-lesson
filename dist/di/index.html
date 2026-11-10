@@ -7,13 +7,12 @@
   <link rel="stylesheet" href="style.css?v=1">
 </head>
 <body>
-  <header><strong>Практика C#</strong><a href="#bug">Ситуация</a><a href="#containers">Контейнеры</a><a href="#exercise">Задание</a><a href="#result">Результат</a></header>
+  <header><strong>Практика C#</strong><a href="#bug">Ситуация</a><a href="#containers">Контейнеры</a><a href="#exercise">Задание</a></header>
   <main class="show">
     <section id="bug">
-      <p class="eyebrow">DI-контейнеры</p>
-      <h1>Окно открывается. Рисунок не появляется</h1>
-      <ul class="flow" aria-label="Участники отрисовки"><li>Окно</li><li class="arrow" aria-hidden="true">→</li><li>Контроллер изображения</li><li class="arrow" aria-hidden="true">←</li><li>Рисовальщик</li></ul>
-      <p>Окно подключает экран к контроллеру. Рисовальщик пишет через свой контроллер. Что увидим, если это два экземпляра?</p>
+      <p class="eyebrow">Практика C#</p>
+      <h1>DI-контейнеры</h1>
+      <p>Как выбрать контейнер для проекта?</p>
     </section>
     <section id="containers">
       <p class="eyebrow">Выбор для проекта</p>
@@ -23,26 +22,13 @@
         <li><strong>Ninject + Factory.</strong> Генерирует реализацию интерфейса фабрики. Этот вариант проверяет домашка.</li>
         <li><strong>Autofac.</strong> Подхватывает <code>Lazy&lt;T&gt;</code> и фабрики с параметрами. <code>Owned&lt;T&gt;</code> даёт вызывающему закрыть область вместе с объектом.</li>
       </ul>
-      <p>Что нужно сделать при запуске? Что станет известно только после диалога?</p>
+      <p>Какой из этих возможностей вам уже не хватало в проекте?</p>
     </section>
     <section id="exercise">
       <p class="eyebrow">Практика · Fractal Painter</p>
       <h2>Перенеси сборку приложения на Microsoft DI</h2>
-      <ol>
-        <li>Зарегистрируй окно, действия, настройки и палитру.</li>
-        <li>Дай окну и рисовальщикам один контроллер.</li>
-        <li>Создай <code>KochPainter</code> при первом рисовании. Для <code>DragonPainter</code> передай фабрике настройки из диалога.</li>
-        <li>Запусти окно, нарисуй оба фрактала и поменяй цвет и размер.</li>
-      </ol>
+      <p>Самостоятельно перенеси проект на Microsoft DI. Проверь, что окно открывается, оба фрактала рисуются, а настройки изображения и палитры применяются.</p>
       <p>Работай в копии проекта из домашки. <a href="https://ulearn.me/course/cs2/Praktika_Fractal_Painter_DI_container__ea0283d6-e0a4-4a88-a427-df4f6dfec831">Условие Fractal Painter</a></p>
-    </section>
-    <section id="result">
-      <p class="eyebrow">Проверка в Avalonia</p>
-      <h2>Две команды, одно окно</h2>
-      <div class="pictures">
-        <figure><img src="koch.png" alt="Кривая Коха в окне Fractal Painter" width="803" height="663"><figcaption>Кривая Коха</figcaption></figure>
-        <figure><img src="dragon.png" alt="Фрактал дракона в том же окне Fractal Painter" width="803" height="663"><figcaption>Дракон после OK</figcaption></figure>
-      </div>
     </section>
     <section class="sources">
       <h2>Источники</h2>
