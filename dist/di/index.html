@@ -12,7 +12,7 @@
   <div class="cover-map" aria-hidden="true"><span>Сервис</span><b>→</b><span>Зависимость</span></div>
 </section>
 <section id="lifetimes">
-  <h2>Три времени жизни в Microsoft DI</h2>
+  <h2>Три времени жизни</h2>
     <div class="lifetime-row"><div><h3>Singleton</h3><p>Один объект на всё приложение. Например, общий кэш.</p></div><pre><code>services.AddSingleton&lt;ReportCache&gt;();</code></pre></div>
     <div class="lifetime-row"><div><h3>Scoped</h3><p>Один объект на область. В ASP.NET Core обычно на один HTTP-запрос.</p></div><pre><code>services.AddScoped&lt;RequestContext&gt;();</code></pre></div>
     <div class="lifetime-row"><div><h3>Transient</h3><p>Новый объект каждый раз, когда его запрашивают у контейнера.</p></div><pre><code>services.AddTransient&lt;ReportFormatter&gt;();</code></pre></div>
