@@ -22,3 +22,5 @@ pre { margin: .8rem 0; padding: .8rem 1rem; white-space: pre-wrap; overflow-wrap
 
 .package-example article:first-child { flex: 1.65 1 25rem; }
 .package-example pre { margin: 0; }
+
+.project-graph { display: block; width: min(100%, 53rem); height: auto; max-height: 32vh; }

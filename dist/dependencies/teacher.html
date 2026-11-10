@@ -5,11 +5,13 @@
 <body><header><strong>Конспект преподавателя</strong><a href="index.html" target="_blank" rel="noopener">Открыть показ</a><a href="#review">Приёмка</a></header>
 <main class="teacher">
 <section><h1>Управление зависимостями</h1><p><strong>25 минут показ · 30 минут самостоятельная работа · 5 минут приёмка.</strong></p><p>Начни со ссылки между проектами. Потом покажи, что NuGet скачивает при restore, и собери свой пакет.</p></section>
-<section><h2>00:00–00:04 · <a href="index.html#projects">Ссылка между проектами</a></h2><p>«Tests явно ссылается на App. App ссылается на Core. Поэтому для Tests App прямой, а Core транзитивный. Если Tests сам использует типы Core, добавлю явную ссылку: так связь останется видна, даже если App перестанет зависеть от Core».</p><p>Покажи команду и то, что она добавила в <code>.csproj</code>. XML на слайде помещается внутри <code>ItemGroup</code>.</p></section>
-<section><h2>00:04–00:08 · <a href="index.html#install">Выбор пакета</a></h2><p>«Ищу NodaTime по названию. На странице пакета проверяю владельца, исходники и Frameworks. Выбираю 3.2.0 для демонстрации. Команда из папки проекта добавляет PackageReference и пытается восстановить пакет».</p></section>
+<section><h2>00:00–00:04 · <a href="index.html#projects">Ссылка между проектами</a></h2><p>«Из Tests идут две стрелки: в Api и TestSupport. Это прямые ссылки. Обе ветки сходятся в Core, значит для Tests к нему есть два транзитивных пути. Storage приходит только через Api».</p><p>Покажи команду и то, что она добавила в <code>.csproj</code>. XML на слайде помещается внутри <code>ItemGroup</code>.</p></section>
+<section><h2>00:04–00:08 · <a href="index.html#install">Выбор пакета</a></h2><p>«Ищу CommunityToolkit.Mvvm по названию. На странице пакета проверяю владельца, исходники и Frameworks. Выбираю 8.2.1 для демонстрации. Команда из папки проекта добавляет PackageReference и пытается восстановить пакет».</p></section>
 <section><h2>00:08–00:12 · <a href="index.html#restore">Restore и кеш</a></h2><p>«Restore читает ссылки, выбирает версии с учётом зависимостей и находит файлы пакетов. Если они уже лежат в кеше, повторно скачивать их не нужно. Результат записывается в project.assets.json».</p><pre><code>dotnet restore
 dotnet list package --include-transitive
-dotnet nuget locals global-packages --list</code></pre><p>Если у выбранного пакета нет транзитивных зависимостей для твоего .NET, список будет пуст.</p></section>
+dotnet nuget locals global-packages --list</code></pre><p>Если у выбранного пакета нет транзитивных зависимостей для твоего .NET, список будет пуст.</p> <h3><a href="index.html#why">Кто подтянул пакет</a></h3>
+<p>«В списке появился Castle.Core, хотя в Tests.csproj я добавил только Moq. После restore запускаю dotnet nuget why. Дерево покажет цепочку Tests → Moq → Castle.Core».</p>
+<p>Для демонстрации используй отдельный SDK-проект с Moq 4.20.72. Команда доступна с .NET SDK 8.0.4xx. <a href="https://habr.com/ru/companies/pvs-studio/articles/833292/">Хабр · .NET Digest</a> · <a href="https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-nuget-why">Microsoft Learn · dotnet nuget why</a> · <a href="https://www.nuget.org/packages/Moq/4.20.72">NuGet · Зависимости Moq</a></p></section>
 <section><h2>00:12–00:19 · <a href="index.html#pack">Подготовка пакета</a></h2><p>«Для демонстрации беру отдельную библиотеку. net8.0 значит, что библиотека собрана для .NET 8. PackageId задаёт имя пакета, Version задаёт его версию. Authors и Description видны на странице пакета».</p>
 <p>В пустой папке выполни <code>dotnet new classlib -n TextKit -f net8.0</code>. Замени содержимое <code>TextKit.csproj</code> на XML со слайда.</p>
 <h3><a href="index.html#publish">От упаковки до публикации</a></h3>
@@ -36,7 +38,7 @@ dotnet add Consumer/Consumer.csproj package Demo.TextKit --version 1.2.0 --sourc
 <li><a href="https://habr.com/ru/companies/eremexru/articles/1055122/">Хабр · Свои NuGet-пакеты и разделение монорепозитория</a></li>
 <li><a href="https://habr.com/ru/articles/691128/">Хабр · Создание .NET-библиотеки от А до Я</a></li>
 <li><a href="https://ulearn.me/course/cs2/Zametki_prepodavatelyu_ee3c83ff-bcdf-4e12-aa89-a42b494d202d">Заметки преподавателю в ulearn</a></li>
-<li><a href="https://www.nuget.org/packages/NodaTime/3.2.0">NodaTime 3.2.0 на nuget.org</a></li>
+<li><a href="https://www.nuget.org/packages/CommunityToolkit.Mvvm/8.2.1">CommunityToolkit.Mvvm 8.2.1 на nuget.org</a></li>
 <li><a href="https://learn.microsoft.com/ru-ru/nuget/create-packages/creating-a-package-dotnet-cli">Создание и публикация пакета</a></li>
 <li><a href="https://semver.org/lang/ru/">Семантическое версионирование</a></li>
 </ul></section></main></body></html>

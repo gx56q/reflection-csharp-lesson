@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Управление зависимостями</title>
-<link rel="stylesheet" href="slides.css?v=pack">
+<link rel="stylesheet" href="slides.css?v=graph">
 <script src="slides.js" defer></script>
 </head>
 <body>
@@ -13,22 +13,34 @@
   <div class="chain"><span>Ссылки между проектами</span><b>→</b><span>Пакеты NuGet</span><b>→</b><span>Версии и публикация</span></div>
 </section>
 <section id="projects">
-  <h2>Прямые и транзитивные зависимости</h2>
-  <div class="chain"><span>Tests</span><b>→</b><span>App</span><b>→</b><span>Core</span></div>
-<div class="cards"><article><h3>Tests → App</h3><p><code>Tests.csproj</code> явно ссылается на <code>App</code>.</p></article><article><h3>Tests → Core</h3><p><code>Tests</code> получает <code>Core</code> через <code>App</code>.</p></article></div>
-<pre><code>dotnet add Tests/Tests.csproj reference App/App.csproj
-&lt;ProjectReference Include="../App/App.csproj" /&gt;</code></pre>
+<h2>Прямые и транзитивные зависимости</h2>
+<svg class="project-graph" viewBox="0 0 840 205" role="img" aria-labelledby="graph-title graph-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="graph-title">Граф ссылок между проектами</title><desc id="graph-desc">Tests ссылается на Api и TestSupport. Оба проекта ссылаются на Core. Api также ссылается на Storage.</desc>
+<defs><marker id="ref-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10z" fill="#137474"/></marker></defs>
+<g fill="none" stroke="#137474" stroke-width="3" marker-end="url(#ref-arrow)"><path d="M192 101 L326 42"/><path d="M192 101 L326 160"/><path d="M503 42 L648 101"/><path d="M503 160 L648 101"/><path d="M503 42 H648"/></g>
+<g fill="#fff" stroke="#83b6ad" stroke-width="2"><rect x="20" y="74" width="172" height="54" rx="10"/><rect x="326" y="15" width="177" height="54" rx="10"/><rect x="326" y="133" width="177" height="54" rx="10"/><rect x="648" y="74" width="172" height="54" rx="10"/><rect x="648" y="15" width="172" height="54" rx="10"/></g>
+<g fill="#102832" text-anchor="middle" dominant-baseline="middle" font-size="25" font-weight="700"><text x="106" y="101">Tests</text><text x="414" y="42">Api</text><text x="414" y="160">TestSupport</text><text x="734" y="101">Core</text><text x="734" y="42">Storage</text></g>
+</svg>
+<p>У <code>Tests</code> две прямые ссылки. <code>Core</code> приходит по двум путям, <code>Storage</code> только через <code>Api</code>.</p>
+<pre><code>dotnet add Tests/Tests.csproj reference Api/Api.csproj
+&lt;ProjectReference Include="../Api/Api.csproj" /&gt;</code></pre>
 </section>
 <section id="install">
   <h2>Как выбрать пакет</h2>
-  <div class="cards"><article><h3>Найти</h3><p>На nuget.org ищем <strong>NodaTime</strong>. На странице пакета проверяем владельца и ссылку на репозиторий.</p></article><article><h3>Проверить</h3><p>Во вкладке <strong>Frameworks</strong> смотрим совместимость с нашим .NET.</p></article><article><h3>Установить</h3><p>Выбираем выпуск <strong>3.2.0</strong> и добавляем его в проект.</p></article></div>
-<pre><code>dotnet add package NodaTime --version 3.2.0
-&lt;PackageReference Include="NodaTime" Version="3.2.0" /&gt;</code></pre>
+  <div class="cards"><article><h3>Найти</h3><p>На nuget.org ищем <strong>CommunityToolkit.Mvvm</strong>. На странице пакета проверяем владельца и ссылку на репозиторий.</p></article><article><h3>Проверить</h3><p>Во вкладке <strong>Frameworks</strong> смотрим совместимость с нашим .NET.</p></article><article><h3>Установить</h3><p>Выбираем выпуск <strong>8.2.1</strong> и добавляем его в проект.</p></article></div>
+<pre><code>dotnet add package CommunityToolkit.Mvvm --version 8.2.1
+&lt;PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" /&gt;</code></pre>
 </section>
 <section id="restore">
   <h2>Что восстанавливает NuGet</h2>
   <div class="chain"><span>.csproj</span><b>→</b><span>NuGet выбирает версии</span><b>→</b><span>Скачивает недостающие пакеты</span></div>
 <div class="cards"><article><h3>Какие пакеты выбраны</h3><pre><code>dotnet list package --include-transitive</code></pre><p>Прямые и транзитивные. Полный граф в <code>obj/project.assets.json</code>.</p></article><article><h3>Где лежат файлы</h3><pre><code>dotnet nuget locals global-packages --list</code></pre><p>В кеше у каждого пакета своя папка, внутри лежат установленные версии.</p></article></div>
+</section>
+<section id="why">
+<h2>Почему в проекте есть Castle.Core?</h2>
+<div class="chain"><span>Tests</span><b>→</b><span>Moq 4.20.72</span><b>→</b><span>Castle.Core</span></div>
+<pre><code>dotnet nuget why Tests/Tests.csproj Castle.Core</code></pre>
+<div class="cards"><article><h3>dotnet list package</h3><p>С <code>--include-transitive</code> показывает, какие пакеты есть в проекте.</p></article><article><h3>dotnet nuget why</h3><p>Показывает пути к выбранному пакету: кто его подтянул.</p></article></div>
 </section>
 <section id="pack">
   <h2>Что указать в .csproj</h2>
