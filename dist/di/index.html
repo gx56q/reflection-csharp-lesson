@@ -61,7 +61,7 @@ builder.Host.UseDefaultServiceProvider(options =&gt;
 var app = builder.Build();</code></pre>
   <div class="cards">
     <article><h3>ValidateOnBuild</h3><p>При <code>Build()</code> найдёт пропущенные зависимости в конструкторах зарегистрированных сервисов.</p></article>
-    <article><h3>ValidateScopes</h3><p>Ловит <code>Scoped</code> внутри <code>Singleton</code> и получение <code>Scoped</code> из корневого контейнера.</p></article>
+    <article><h3>ValidateScopes</h3><p>Проверяет, что <code>singleton</code> не зависит от <code>scoped</code>-сервиса и что <code>scoped</code>-сервис запрашивают только внутри области.</p></article>
   </div>
 </section>
 <section id="scope">
