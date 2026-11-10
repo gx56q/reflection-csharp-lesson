@@ -4,13 +4,13 @@
 <title>Управление зависимостями · Конспект</title><link rel="stylesheet" href="style.css"></head>
 <body><header><strong>Конспект преподавателя</strong><a href="index.html" target="_blank" rel="noopener">Открыть показ</a><a href="#review">Приёмка</a></header>
 <main class="teacher">
-<section><h1>Управление зависимостями</h1><p><strong>25 минут показ · 30 минут самостоятельная работа · 5 минут приёмка.</strong></p><p>Покажи три операции: добавить ссылку, посмотреть результат restore и собрать собственный пакет. Для каждой отдельный пример.</p></section>
+<section><h1>Управление зависимостями</h1><p><strong>25 минут показ · 30 минут самостоятельная работа · 5 минут приёмка.</strong></p><p>Начни со ссылки между проектами. Потом покажи, что NuGet скачивает при restore, и собери свой пакет.</p></section>
 <section><h2>00:00–00:04 · <a href="index.html#projects">Ссылка между проектами</a></h2><p>«Tests явно ссылается на App. App ссылается на Core. Поэтому для Tests App прямой, а Core транзитивный. Если Tests сам использует типы Core, добавлю явную ссылку: так связь останется видна, даже если App перестанет зависеть от Core».</p><p>Покажи команду и то, что она добавила в <code>.csproj</code>. XML на слайде помещается внутри <code>ItemGroup</code>.</p></section>
 <section><h2>00:04–00:08 · <a href="index.html#install">Выбор пакета</a></h2><p>«Ищу NodaTime по названию. На странице пакета проверяю владельца, исходники и Frameworks. Выбираю 3.2.0 для демонстрации. Команда из папки проекта добавляет PackageReference и пытается восстановить пакет».</p></section>
 <section><h2>00:08–00:12 · <a href="index.html#restore">Restore и кеш</a></h2><p>«Restore читает ссылки, выбирает версии с учётом зависимостей и находит файлы пакетов. Если они уже лежат в кеше, повторно скачивать их не нужно. Результат записывается в project.assets.json».</p><pre><code>dotnet restore
 dotnet list package --include-transitive
 dotnet nuget locals global-packages --list</code></pre><p>Если у выбранного пакета нет транзитивных зависимостей для твоего .NET, список будет пуст.</p></section>
-<section><h2>00:12–00:19 · <a href="index.html#pack">Подготовка пакета</a></h2><p>«Для демонстрации беру отдельную библиотеку. TargetFramework задаёт цель сборки, PackageId и Version определяют имя пакета, Authors и Description помогают понять, чей он и для чего нужен».</p>
+<section><h2>00:12–00:19 · <a href="index.html#pack">Подготовка пакета</a></h2><p>«Для демонстрации беру отдельную библиотеку. net8.0 значит, что библиотека собрана для .NET 8. PackageId задаёт имя пакета, Version задаёт его версию. Authors и Description видны на странице пакета».</p>
 <p>В пустой папке выполни <code>dotnet new classlib -n TextKit -f net8.0</code>. Замени содержимое <code>TextKit.csproj</code> на XML со слайда.</p>
 <h3><a href="index.html#publish">От упаковки до публикации</a></h3>
 <p>«Pack создаёт .nupkg. Открою его как ZIP: там DLL и .nuspec с метаданными. Прежде чем отправлять пакет на сервер, поставлю его в отдельный проект из локальной папки».</p>
@@ -18,7 +18,7 @@ dotnet nuget locals global-packages --list</code></pre><p>Если у выбра
 dotnet new classlib -n Consumer -f net8.0
 dotnet add Consumer/Consumer.csproj package Demo.TextKit --version 1.2.0 --source (Resolve-Path ./packages).Path</code></pre>
 <p>Последняя команда для PowerShell. Для публичного пакета используют nuget.org. Приватный источник подходит для внутренних библиотек. Адрес и авторизация зависят от источника. Команду публикации показываем с заглушками.</p></section>
-<section><h2>00:19–00:23 · <a href="index.html#versions">SemVer</a></h2><p>«В примере с CSV каждое изменение сравниваем с 1.2.0. Совместимое исправление даёт PATCH, совместимая возможность даёт MINOR, а удаление публичного метода требует MAJOR».</p><p><a href="index.html#preview">Предварительные версии</a>. «До стабильного 2.0.0 можно опубликовать 2.0.0-preview.1. Его можно выбрать по полному номеру или найти через Include prerelease».</p></section>
+<section><h2>00:19–00:23 · <a href="index.html#versions">SemVer</a></h2><p>«В примере с CSV каждое изменение сравниваем с 1.2.0. При совместимом исправлении меняю третье число, PATCH. Если добавил возможность и старый код работает, меняю второе, MINOR. Если старый код придётся менять, увеличиваю первое, MAJOR».</p><p><a href="index.html#preview">Предварительные версии</a>. «Суффикс после дефиса обозначает предварительную версию. На слайде есть реальный пример System.Text.Json. Можно указать полный номер в команде или включить Include prerelease в Visual Studio».</p></section>
 <section><h2>00:23–00:25 · <a href="index.html#choice">Проект или пакет</a></h2><p>«Если код меняем и тестируем вместе, проектная ссылка позволяет сразу собрать всё из текущих исходников. Если библиотеку выпускаем отдельно, потребитель выбирает версию пакета и обновляется в своём темпе».</p></section>
 <section id="practice"><h2>00:25–00:55 · Самостоятельно</h2><p>После показа дай группе <a href="https://ulearn.me/course/cs2/Aktivnost_FileSender__1b0d1cd3-dec2-4d91-aadb-1a17c623c9bd">FileSender в ulearn</a>. <a href="FileSender.zip" download>Заготовка</a>.</p></section>
 <section id="review"><h2>00:55–01:00 · Приёмка</h2>
@@ -30,6 +30,9 @@ dotnet add Consumer/Consumer.csproj package Demo.TextKit --version 1.2.0 --sourc
 </ul>
 <p>Попроси показать запуск тестов и один смешанный сценарий. Если работа ещё идёт, пусть студент покажет последний зелёный тест и назовёт следующий случай.</p></section>
 <section><h2>Ссылки</h2><ul>
+<li><a href="https://habr.com/ru/companies/eremexru/articles/975746/">Хабр · NuGet, кеши и приватный источник</a></li>
+<li><a href="https://habr.com/ru/articles/954878/">Хабр · Семантическое версионирование</a></li>
+<li><a href="https://www.nuget.org/packages/System.Text.Json/10.0.0-preview.1.25080.5">NuGet · Предварительный выпуск System.Text.Json</a></li>
 <li><a href="https://habr.com/ru/companies/eremexru/articles/1055122/">Хабр · Свои NuGet-пакеты и разделение монорепозитория</a></li>
 <li><a href="https://habr.com/ru/articles/691128/">Хабр · Создание .NET-библиотеки от А до Я</a></li>
 <li><a href="https://ulearn.me/course/cs2/Zametki_prepodavatelyu_ee3c83ff-bcdf-4e12-aa89-a42b494d202d">Заметки преподавателю в ulearn</a></li>

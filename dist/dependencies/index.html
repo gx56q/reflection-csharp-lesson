@@ -13,22 +13,22 @@
   <div class="chain"><span>Ссылки между проектами</span><b>→</b><span>Пакеты NuGet</span><b>→</b><span>Версии и публикация</span></div>
 </section>
 <section id="projects">
-  <h2>Откуда берётся зависимость</h2>
+  <h2>Прямые и транзитивные зависимости</h2>
   <div class="chain"><span>Tests</span><b>→</b><span>App</span><b>→</b><span>Core</span></div>
-<div class="cards"><article><h3>Tests → App</h3><p>Прямая ссылка. Её добавили в <code>Tests.csproj</code>.</p></article><article><h3>Tests → Core</h3><p>Транзитивная ссылка. Она приходит через <code>App</code>.</p></article></div>
+<div class="cards"><article><h3>Tests → App</h3><p><code>Tests.csproj</code> явно ссылается на <code>App</code>.</p></article><article><h3>Tests → Core</h3><p><code>Tests</code> получает <code>Core</code> через <code>App</code>.</p></article></div>
 <pre><code>dotnet add Tests/Tests.csproj reference App/App.csproj
 &lt;ProjectReference Include="../App/App.csproj" /&gt;</code></pre>
 </section>
 <section id="install">
   <h2>Как выбрать пакет</h2>
-  <div class="cards"><article><h3>Найти</h3><p>В поиске NuGet вводим <strong>NodaTime</strong>. Сверяем владельца и исходники.</p></article><article><h3>Проверить</h3><p>Во вкладке <strong>Frameworks</strong> смотрим совместимость с нашим .NET.</p></article><article><h3>Установить</h3><p>Выбираем конкретный выпуск. Для примера взяли <strong>3.2.0</strong>.</p></article></div>
+  <div class="cards"><article><h3>Найти</h3><p>На nuget.org ищем <strong>NodaTime</strong>. На странице пакета проверяем владельца и ссылку на репозиторий.</p></article><article><h3>Проверить</h3><p>Во вкладке <strong>Frameworks</strong> смотрим совместимость с нашим .NET.</p></article><article><h3>Установить</h3><p>Выбираем выпуск <strong>3.2.0</strong> и добавляем его в проект.</p></article></div>
 <pre><code>dotnet add package NodaTime --version 3.2.0
 &lt;PackageReference Include="NodaTime" Version="3.2.0" /&gt;</code></pre>
 </section>
 <section id="restore">
-  <h2>Где искать результат restore</h2>
-  <div class="chain"><span>.csproj</span><b>→</b><span>NuGet выбирает версии</span><b>→</b><span>Берёт из кеша или скачивает</span></div>
-<div class="cards"><article><h3>Какие пакеты выбраны</h3><pre><code>dotnet list package --include-transitive</code></pre><p>Прямые и транзитивные. Полный граф в <code>obj/project.assets.json</code>.</p></article><article><h3>Где лежат файлы</h3><pre><code>dotnet nuget locals global-packages --list</code></pre><p>Путь к кешу. Внутри папки по ID пакета и версии.</p></article></div>
+  <h2>Что восстанавливает NuGet</h2>
+  <div class="chain"><span>.csproj</span><b>→</b><span>NuGet выбирает версии</span><b>→</b><span>Скачивает недостающие пакеты</span></div>
+<div class="cards"><article><h3>Какие пакеты выбраны</h3><pre><code>dotnet list package --include-transitive</code></pre><p>Прямые и транзитивные. Полный граф в <code>obj/project.assets.json</code>.</p></article><article><h3>Где лежат файлы</h3><pre><code>dotnet nuget locals global-packages --list</code></pre><p>В кеше у каждого пакета своя папка, внутри лежат установленные версии.</p></article></div>
 </section>
 <section id="pack">
   <h2>Что указать в .csproj</h2>
@@ -40,26 +40,26 @@
     &lt;Authors&gt;Demo Team&lt;/Authors&gt;
     &lt;Description&gt;Обработка текста&lt;/Description&gt;
   &lt;/PropertyGroup&gt;
-&lt;/Project&gt;</code></pre></article><article><h3>Что увидит потребитель</h3><p><code>Demo.TextKit</code> — ID для поиска и установки.</p><p><code>net8.0</code> — цель сборки библиотеки.</p><p>Авторы и описание попадут в метаданные пакета.</p></article></div>
+&lt;/Project&gt;</code></pre></article><article><h3>Что увидит потребитель</h3><p><code>PackageId</code> задаёт имя, по которому пакет ищут и устанавливают.</p><p><code>net8.0</code> означает, что библиотека собрана для .NET 8.</p><p><code>Authors</code> и <code>Description</code> появятся на странице пакета.</p></article></div>
 </section>
 <section id="publish">
-  <h2>Собрать, проверить, отправить</h2>
+  <h2>От сборки пакета до публикации</h2>
   <div class="chain"><span>dotnet pack</span><b>→</b><span>Установка в тестовый проект</span><b>→</b><span>dotnet nuget push</span></div>
   <pre><code>dotnet pack -c Release -o ./packages
 dotnet nuget push ./packages/Demo.TextKit.1.2.0.nupkg --source &lt;источник&gt; --api-key &lt;ключ&gt;</code></pre>
-  <div class="cards"><article><h3>Локальная папка</h3><p>Проверить пакет до публикации.</p></article><article><h3>nuget.org</h3><p>Открытый пакет.</p></article><article><h3>Приватный источник</h3><p>Доступ по правилам команды.</p></article></div>
+  <div class="cards"><article><h3>Локальная папка</h3><p>Проверить пакет до публикации.</p></article><article><h3>nuget.org</h3><p>Пакет доступен всем.</p></article><article><h3>Приватный источник</h3><p>Пакет доступен тем, кому выдали доступ.</p></article></div>
 </section>
 <section id="versions">
-  <h2>Что обещает номер версии</h2>
-  <div class="cards"><article><h3>1.2.0 → 1.2.1</h3><p><strong>PATCH</strong></p><p>Исправили чтение пустой строки в CSV. Контракт прежний.</p></article><article><h3>1.2.0 → 1.3.0</h3><p><strong>MINOR</strong></p><p>Добавили поддержку другого разделителя. Старые вызовы работают.</p></article><article><h3>1.2.0 → 2.0.0</h3><p><strong>MAJOR</strong></p><p>Удалили публичный метод. Клиентам нужно поменять код.</p></article></div>
+  <h2>SemVer: что означают три числа</h2><p class="lead"><code>MAJOR.MINOR.PATCH</code></p>
+  <div class="cards"><article><h3>1.2.0 → 1.2.1</h3><p><strong>PATCH</strong></p><p>Исправили чтение пустой строки в CSV. Код, который использует библиотеку, менять не нужно.</p></article><article><h3>1.2.0 → 1.3.0</h3><p><strong>MINOR</strong></p><p>Добавили поддержку другого разделителя. Старые вызовы работают.</p></article><article><h3>1.2.0 → 2.0.0</h3><p><strong>MAJOR</strong></p><p>Удалили публичный метод. Клиентам нужно поменять код.</p></article></div>
 </section>
 <section id="preview">
   <h2>Предварительные версии</h2>
-  <div class="chain"><span><code>2.0.0-preview.1</code></span><b>→</b><span><code>2.0.0-preview.2</code></span><b>→</b><span><code>2.0.0</code></span></div><p class="lead">Потребители могут проверить новый API до стабильного выпуска.</p><pre><code>dotnet add package Example.Csv --version 2.0.0-preview.1</code></pre><p>Учебный ID. В NuGet Package Manager такие версии видны с <strong>Include prerelease</strong>.</p>
+  <div class="chain"><span><code>2.0.0-preview.1</code></span><b>→</b><span><code>2.0.0-preview.2</code></span><b>→</b><span><code>2.0.0</code></span></div><p class="lead">Потребители могут проверить новый API до стабильного выпуска.</p><pre><code>dotnet add package System.Text.Json --version 10.0.0-preview.1.25080.5</code></pre><p>В NuGet Package Manager включаем <strong>Include prerelease</strong>, чтобы увидеть предварительные выпуски.</p>
 </section>
 <section id="choice">
   <h2>Проект или пакет?</h2>
-  <div class="cards"><article><h3>ProjectReference</h3><div class="chain"><span>Приложение</span><b>→</b><span>Сборка проекта</span></div><p>Удобно, когда код меняется и проверяется вместе.</p></article><article><h3>PackageReference</h3><div class="chain"><span>Приложение</span><b>→</b><span>Версия пакета</span></div><p>Удобно, когда библиотека выпускается отдельно.</p></article></div>
+  <div class="cards"><article><h3>ProjectReference</h3><div class="chain"><span>Приложение</span><b>→</b><span>Сборка проекта</span></div><p>Приложение и библиотека собираются вместе из исходников.</p></article><article><h3>PackageReference</h3><div class="chain"><span>Приложение</span><b>→</b><span>Версия пакета</span></div><p>Библиотека выпускает новые версии. Приложение решает, когда обновляться.</p></article></div>
 </section>
 </main>
 <nav aria-label="Слайды"><button id="prev" type="button">← Назад</button><span id="counter" aria-live="polite"></span><button id="next" type="button">Дальше →</button><button id="fullscreen" type="button" hidden>На весь экран</button></nav>
