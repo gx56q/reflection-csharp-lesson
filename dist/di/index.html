@@ -1,44 +1,75 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DI-контейнеры · Fractal Painter</title>
-  <link rel="stylesheet" href="style.css?v=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=lesson60">
+<script src="slides.js?v=lesson60" defer></script>
 </head>
 <body>
-  <header><strong>Практика C#</strong><a href="#bug">Ситуация</a><a href="#containers">Контейнеры</a><a href="#exercise">Задание</a></header>
-  <main class="show">
-    <section id="bug">
-      <p class="eyebrow">Практика C#</p>
-      <h1>DI-контейнеры</h1>
-      <p>Как выбрать контейнер для проекта?</p>
-    </section>
-    <section id="containers">
-      <p class="eyebrow">Выбор для проекта</p>
-      <h2>Что контейнер сделает за нас</h2>
-      <ul>
-        <li><strong>Microsoft DI.</strong> Объекты по конструкторам, времена жизни, коллекции реализаций. Фабрика для настроек из диалога пишется явно.</li>
-        <li><strong>Ninject + Factory.</strong> Генерирует реализацию интерфейса фабрики. Этот вариант проверяет домашка.</li>
-        <li><strong>Autofac.</strong> Подхватывает <code>Lazy&lt;T&gt;</code> и фабрики с параметрами. <code>Owned&lt;T&gt;</code> даёт вызывающему закрыть область вместе с объектом.</li>
-      </ul>
-      <p>Какой из этих возможностей вам уже не хватало в проекте?</p>
-    </section>
-    <section id="exercise">
-      <p class="eyebrow">Практика · Fractal Painter</p>
-      <h2>Перенеси сборку приложения на Microsoft DI</h2>
-      <p>Самостоятельно перенеси проект на Microsoft DI. Проверь, что окно открывается, оба фрактала рисуются, а настройки изображения и палитры применяются.</p>
-      <p>Работай в копии проекта из домашки. <a href="https://ulearn.me/course/cs2/Praktika_Fractal_Painter_DI_container__ea0283d6-e0a4-4a88-a427-df4f6dfec831">Условие Fractal Painter</a></p>
-    </section>
-    <section class="sources">
-      <h2>Источники</h2>
-      <ul>
-        <li><a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview">Microsoft Learn: регистрации и времена жизни</a></li>
-        <li><a href="https://docs.avaloniaui.net/docs/app-development/dependency-injection">Avalonia: внедрение зависимостей</a></li>
-        <li><a href="https://github.com/ninject/Ninject.Extensions.Factory">Ninject: автоматические фабрики</a></li>
-        <li><a href="https://docs.autofac.org/en/latest/resolve/relationships.html">Autofac: типы зависимостей</a></li>
-      </ul>
-    </section>
-  </main>
+<header><strong>Практика C#</strong><a href="#exercise">К заданию</a></header>
+<main>
+<section id="start">
+  <p class="tag">DI-контейнеры</p>
+  <h1>Кто создаёт объекты?</h1>
+  <p class="lead">Приложение отправляет письма. В тесте отправитель записывает письма в список. Где выбрать, какой отправитель нужен?</p>
+  <div class="chain"><span>Запуск</span><b>→</b><span>Выбор реализации</span><b>→</b><span>Сервис получает отправителя</span></div>
+</section>
+<section id="lifetimes">
+  <p class="tag">Время жизни</p>
+  <h2>Две операции. Сколько объектов?</h2>
+  <div class="cards">
+    <article><h3>Transient</h3><p>Новый при каждом разрешении.</p></article>
+    <article><h3>Scoped</h3><p>Один на область. Например, на запрос.</p></article>
+    <article><h3>Singleton</h3><p>Один на регистрацию в корневом провайдере.</p></article>
+  </div>
+  <p class="lead">Фоновая служба работает всё время. Сколько должен жить контекст базы для одной задачи?</p>
+</section>
+<section id="scope">
+  <p class="tag">Рабочий сценарий</p>
+  <h2>Область на одну операцию</h2>
+  <div class="chain"><span>Фоновая служба</span><b>→</b><span>Открыть область</span><b>→</b><span>Обработать задачу</span><b>→</b><span>Закрыть область</span></div>
+  <p class="lead">Служба продолжает работать. Контекст базы освобождается вместе с областью.</p>
+  <p class="source"><a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/scoped-service">Microsoft Learn · Scoped services in BackgroundService</a></p>
+</section>
+<section id="choice">
+  <p class="tag">Выбор контейнера</p>
+  <h2>За что берём ещё пакет?</h2>
+  <div class="cards">
+    <article><h3>Microsoft DI</h3><p>Обычная сборка, времена жизни, коллекции, ключи.</p><p>Фабрики пишем явно.</p></article>
+    <article><h3>Ninject + Factory</h3><p>Создаёт реализацию интерфейса фабрики. Так устроена домашка.</p></article>
+    <article><h3>Autofac</h3><p>Поддерживает Lazy, фабрики с параметрами и вложенные области.</p></article>
+  </div>
+  <p class="source"><a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview">Microsoft</a> · <a href="https://github.com/ninject/Ninject.Extensions.Factory">Ninject</a> · <a href="https://docs.autofac.org/en/latest/resolve/relationships.html">Autofac</a></p>
+</section>
+<section id="speed">
+  <p class="tag">Производительность</p>
+  <h2>Какой участок замерили?</h2>
+  <div class="cards">
+    <article><h3>Сборка</h3><p>Настройка провайдера при запуске.</p></article>
+    <article><h3>Первый запрос</h3><p>Первое получение объекта и его зависимостей.</p></article>
+    <article><h3>Повторный запрос</h3><p>Получение объекта после прогрева.</p></article>
+  </div>
+  <p class="lead">Если в таблице быстрее GetService, станет ли быстрее операция пользователя?</p>
+  <p class="source"><a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-8/">.NET Blog · Performance Improvements in .NET 8</a></p>
+</section>
+<section id="exercise">
+  <p class="tag">Самостоятельная практика</p>
+  <h2>Fractal Painter на Microsoft DI</h2>
+  <p class="lead">Перенесите сборку приложения на Microsoft DI в отдельной копии проекта.</p>
+  <div class="cards">
+    <article><h3>Окно</h3><p>Открывается. Все команды на месте.</p></article>
+    <article><h3>Два фрактала</h3><p>Кривая Коха рисуется. Дракон рисуется после OK.</p></article>
+    <article><h3>Настройки</h3><p>Цвет и размер применяются при рисовании.</p></article>
+  </div>
+  <p class="source"><a href="https://ulearn.me/course/cs2/Praktika_Fractal_Painter_DI_container__ea0283d6-e0a4-4a88-a427-df4f6dfec831">Исходное задание</a> · <a href="https://docs.avaloniaui.net/docs/app-development/dependency-injection">Avalonia · DI</a></p>
+</section>
+<section id="finish">
+  <p class="tag">Проверка</p>
+  <h2>Покажи, как работает твоя копия</h2>
+  <p class="lead">Открой приложение и нарисуй оба фрактала. Затем покажи место, где приложение собирает зависимости.</p>
+  <p>Если ещё не закончил, назови последний работающий шаг и покажи конкретную ошибку.</p>
+</section>
+</main>
+<nav aria-label="Слайды"><button id="prev" type="button">← Назад</button><span id="counter" aria-live="polite"></span><button id="next" type="button">Дальше →</button></nav>
 </body>
 </html>
