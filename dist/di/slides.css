@@ -43,3 +43,9 @@ article pre { font-size: clamp(.8rem, 1.65vw, 1.25rem); }
 .cover-map { grid-template-columns: max-content auto max-content; width: fit-content; font-size: clamp(1.15rem, 3vw, 2.2rem); color: #075f60; }
 .cover-map span, .request-map span { background: white; border: 1px solid #bfd1d4; padding: .55rem .8rem; border-radius: .5rem; }
 .cards pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.lifetime-row { display: grid; gap: .55rem; margin-bottom: .65rem; }
+.lifetime-row pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (min-width: 760px) {
+  .lifetime-row { grid-template-columns: 1fr 1.15fr; align-items: center; gap: 1rem; }
+}
