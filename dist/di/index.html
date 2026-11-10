@@ -2,36 +2,24 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=lifetimes">
+<title>DI-контейнеры · Практика C#</title><link rel="stylesheet" href="slides.css?v=three">
 <script src="slides.js?v=examples" defer></script>
 </head>
 <body>
-<header><strong>Практика C#</strong><a href="#cover">Обложка</a></header>
 <main>
-<section id="cover">
-  <p class="tag">Проектирование на C#</p>
-  <h1>DI-контейнеры</h1><div class="cover-map" aria-hidden="true"><span>Сервис</span><b>→</b><span>Зависимость</span></div>
-</section>
 <section id="lifetimes">
-  <p class="tag">Microsoft DI</p>
-  <h2>Singleton, Scoped, Transient</h2>
-  <pre><code>services.AddSingleton&lt;ReportCache&gt;();
-services.AddScoped&lt;RequestContext&gt;();
-services.AddTransient&lt;ReportFormatter&gt;();</code></pre>
-  <div class="lifetime-example">
-    <table>
-      <caption>Каждый сервис получаем из DI дважды за HTTP-запрос</caption>
-      <thead><tr><th scope="col">Регистрация</th><th scope="col">Запрос Алисы</th><th scope="col">Запрос Бориса</th></tr></thead>
-      <tbody>
-        <tr><th scope="row">Singleton</th><td><code>#1 → #1</code></td><td><code>#1 → #1</code></td></tr>
-        <tr><th scope="row">Scoped</th><td><code>#2 → #2</code></td><td><code>#3 → #3</code></td></tr>
-        <tr><th scope="row">Transient</th><td><code>#4 → #5</code></td><td><code>#6 → #7</code></td></tr>
-      </tbody>
-    </table>
-  </div>
+  <h1>Три времени жизни в Microsoft DI</h1>
+  <h3>Singleton</h3>
+  <p>Один объект на всё приложение. Например, общий кэш.</p>
+  <pre><code>services.AddSingleton&lt;ReportCache&gt;();</code></pre>
+  <h3>Scoped</h3>
+  <p>Один объект на область. В ASP.NET Core обычно на один HTTP-запрос.</p>
+  <pre><code>services.AddScoped&lt;RequestContext&gt;();</code></pre>
+  <h3>Transient</h3>
+  <p>Новый объект каждый раз, когда его запрашивают у контейнера.</p>
+  <pre><code>services.AddTransient&lt;ReportFormatter&gt;();</code></pre>
 </section>
 <section id="start">
-  <p class="tag">Примеры из статьи Контура</p>
   <h2>Два сбоя из-за настроек DI</h2>
   <div class="cards">
     <article><h3>Сервис не зарегистрирован</h3><p><code>GET /health</code> <strong class="ok">200</strong><br><code>GET /reports</code> <strong class="fail">500</strong></p></article>
@@ -39,7 +27,6 @@ services.AddTransient&lt;ReportFormatter&gt;();</code></pre>
   </div>
 </section>
 <section id="registrations">
-  <p class="tag">Регистрации</p>
   <h2>Регистрация по типу и через фабрику</h2>
   <div class="cards">
     <article><h3>По типу</h3><pre><code>builder.RegisterType&lt;B&gt;();</code></pre><p>Список зависимостей берётся из конструктора <code>B</code>.</p></article>
@@ -48,14 +35,12 @@ services.AddTransient&lt;ReportFormatter&gt;();</code></pre>
   </div>
 </section>
 <section id="missing">
-  <p class="tag">Пропущенная регистрация</p>
   <h2>Редкий маршрут падает при первом вызове</h2>
   <div class="chain diagram"><span>GET /reports</span><b>→</b><span><code>B(A a)</code></span><b>→</b><span class="broken"><code>A</code> не зарегистрирован</span></div>
   <pre><code>builder.RegisterType&lt;B&gt;();
 <span class="code-error">container.Resolve&lt;B&gt;(); // B(A a), но A не зарегистрирован</span></code></pre>
 </section>
 <section id="scope">
-  <p class="tag">Захваченная зависимость</p>
   <h2>Контекст первого пользователя остаётся в singleton</h2>
   <div class="request-map">
     <span>Запрос Алисы</span><b>→</b><span class="shared"><code>DBProvider</code><br>один на два запроса</span><b>→</b><span class="stored">Контекст Алисы</span>
@@ -67,7 +52,6 @@ services.AddTransient&lt;ReportFormatter&gt;();</code></pre>
 }</code></pre>
 </section>
 <section id="validation">
-  <p class="tag">Проверка регистраций</p>
   <h2>Зависимости фабрики спрятаны внутри функции</h2>
   <div class="cards">
     <article><h3>В конструкторе</h3><p>Параметры видны до создания объекта.</p></article>
@@ -80,7 +64,6 @@ services.AddTransient&lt;ReportFormatter&gt;();</code></pre>
 });</code></pre>
 </section>
 <section id="choice">
-  <p class="tag">Выбор контейнера</p>
   <h2>У контейнеров разные возможности</h2>
   <div class="cards">
     <article><h3>Microsoft DI</h3><p>Регистрация по типу, по функции или готовым объектом. Три времени жизни.</p></article>
@@ -91,7 +74,6 @@ services.AddTransient&lt;ReportFormatter&gt;();</code></pre>
 public delegate Report ReportFactory(string name);</code></pre>
 </section>
 <section id="multiple">
-  <p class="tag">Microsoft DI</p>
   <h2>Две регистрации одного интерфейса</h2>
   <pre><code>services.AddSingleton&lt;INotifier, EmailNotifier&gt;();
 services.AddSingleton&lt;INotifier, SmsNotifier&gt;();
@@ -104,7 +86,6 @@ using var provider = services.BuildServiceProvider();</code></pre>
   </div>
 </section>
 <section id="exercise">
-  <p class="tag">Самостоятельная практика</p>
   <h2>Fractal Painter на Microsoft DI</h2>
   <p class="lead">Перенесите сборку приложения на Microsoft DI в отдельной копии проекта.</p>
   <div class="cards">
