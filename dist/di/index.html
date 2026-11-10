@@ -66,13 +66,13 @@ var app = builder.Build();</code></pre>
 </section>
 <section id="scope">
   <h2>Ночной отчёт без HTTP-запроса</h2>
-  <p class="lead">В полночь приложение строит отчёт по расписанию. Ему нужен <code>ReportService</code>, зарегистрированный как <code>scoped</code>.</p>
+  <p class="lead">В полночь <code>ReportService</code> читает данные для отчёта через <code>DbContext</code>.</p>
   <div class="chain"><span>Открываем область</span><b>→</b><span>Строим отчёт</span><b>→</b><span>Закрываем область</span></div>
   <pre><code>await using var scope = scopeFactory.CreateAsyncScope();
 var reports = scope.ServiceProvider
     .GetRequiredService&lt;ReportService&gt;();
 await reports.GenerateAsync(stoppingToken);</code></pre>
-  <p>Область живёт ровно столько, сколько строится один отчёт.</p>
+  <p>На каждый отчёт своя область. В конце контейнер освобождает её <code>DbContext</code>.</p>
 </section>
 <section id="validation">
   <h2>Когда нужна фабрика</h2>
